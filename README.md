@@ -5,23 +5,44 @@ A beautiful, interactive 3D aquarium built with Three.js featuring realistic fis
 ## Features
 
 - **Realistic 3D Environment**: Glass aquarium with proper lighting and shadows
-- **Animated Fish**: Multiple fish with realistic swimming patterns and fin animations
-- **Aquatic Plants**: Swaying plants with natural movement
-- **Gravel Floor**: Textured sand/gravel bottom with realistic appearance
-- **Interactive Controls**:
-  - Mouse drag to rotate the view
-  - Scroll wheel to zoom in/out
-  - Auto-rotate toggle
-  - Add more fish and plants dynamically
-  - Reset view button
+- **Animated Fish**: Multiple species with realistic swimming patterns, tail and fin animations
+- **Aquatic Plants**: Swaying plants with natural movement anchored to the gravel floor
+- **Gravel Floor**: Textured sand/gravel bottom with realistic procedurally-generated appearance
+- **Decorative Rocks**: Randomly shaped rocks for natural aquarium decoration
+- **Bubble Effects**: Rising bubbles with wobble motion and fade effects
+- **Fish Schooling**: Fish naturally group together and swim in coordinated patterns
+- **Interactive Controls**: Full mouse control with 8 interactive buttons
+- **Performance Optimized**: Smooth 60 FPS with shadow mapping and efficient rendering
+- **Responsive Design**: Automatically adjusts to window resizing
 
-## How to Use
+## How to Run
 
-1. Open `index.html` in a modern web browser
-2. Interact with the aquarium:
-   - **Drag with mouse** to rotate the view
-   - **Scroll** to zoom in and out
-   - **Click buttons** to add fish, add plants, toggle auto-rotate, or reset the view
+### Quick Start
+1. **Simply open `index.html` in any modern web browser** (Chrome, Firefox, Safari, Edge)
+   - No installation required
+   - No build process needed
+   - No web server required (works directly from file system)
+
+2. The aquarium will automatically load with:
+   - 3 fish swimming around
+   - 4 aquatic plants
+   - 2 decorative rocks
+   - Animated bubbles
+
+### Interactive Controls
+
+Once loaded, you can interact with the aquarium:
+- **Drag with mouse** to rotate the view around the aquarium
+- **Scroll wheel** to zoom in and out
+- **Click buttons** to:
+  - 🔄 **Auto-Rotate**: Toggle automatic rotation
+  - ➕ **Fish**: Add a new fish (up to 20)
+  - 🌿 **Plant**: Add a new plant (up to 15)
+  - 🪨 **Rock**: Add a decorative rock (up to 10)
+  - 💧 **Bubbles**: Toggle bubble effects
+  - 🐟 **Schooling**: Toggle fish schooling behavior
+  - 🔍 **Reset View**: Return camera to default position
+  - 🗑️ **Clear All**: Remove all fish, plants, and rocks
 
 ## Technical Details
 
