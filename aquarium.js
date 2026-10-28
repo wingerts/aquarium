@@ -24,7 +24,7 @@ function init() {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Lighting
     setupLighting();
