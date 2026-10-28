@@ -40,8 +40,8 @@ function init() {
         addPlant();
     }
     
-    // Add initial rocks
-    for (let i = 0; i < 2; i++) {
+    // Add initial rocks and pebbles
+    for (let i = 0; i < 5; i++) {
         addRock();
     }
     
@@ -60,12 +60,12 @@ function init() {
 
 // Setup lighting
 function setupLighting() {
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Ambient light - softer for underwater feel
+    const ambientLight = new THREE.AmbientLight(0x6699cc, 0.5);
     scene.add(ambientLight);
 
-    // Directional light (sun)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    // Directional light (sun) - creates underwater rays effect
+    const directionalLight = new THREE.DirectionalLight(0xccddff, 0.7);
     directionalLight.position.set(20, 30, 20);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -76,10 +76,15 @@ function setupLighting() {
     directionalLight.shadow.camera.bottom = -50;
     scene.add(directionalLight);
 
-    // Point light inside aquarium
-    const pointLight = new THREE.PointLight(0x87ceeb, 0.5);
-    pointLight.position.set(0, 15, 0);
+    // Point light inside aquarium - creates underwater glow
+    const pointLight = new THREE.PointLight(0x88bbdd, 0.6);
+    pointLight.position.set(0, 10, 0);
     scene.add(pointLight);
+    
+    // Additional point light for side lighting
+    const sideLight = new THREE.PointLight(0x6699ff, 0.3);
+    sideLight.position.set(15, 5, 15);
+    scene.add(sideLight);
 }
 
 // Create the aquarium structure
@@ -145,11 +150,11 @@ function createAquarium() {
     aquarium = group;
 }
 
-// Create gravel floor with realistic texture
+// Create gravel floor with realistic texture and sand patches
 function createGravelFloor(width, depth, parentGroup) {
     const floorGeometry = new THREE.PlaneGeometry(width, depth);
     
-    // Create a canvas texture for gravel
+    // Create a canvas texture for gravel with more detail
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
@@ -159,13 +164,39 @@ function createGravelFloor(width, depth, parentGroup) {
     ctx.fillStyle = '#8B7355';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add gravel particles
-    for (let i = 0; i < 5000; i++) {
+    // Add sand patches for variety
+    for (let p = 0; p < 15; p++) {
+        const patchX = Math.random() * canvas.width;
+        const patchY = Math.random() * canvas.height;
+        const patchSize = Math.random() * 80 + 40;
+        const gradient = ctx.createRadialGradient(patchX, patchY, 0, patchX, patchY, patchSize);
+        gradient.addColorStop(0, '#C4A57B');
+        gradient.addColorStop(1, '#8B7355');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(patchX, patchY, patchSize, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // Add gravel particles with more variation
+    for (let i = 0; i < 8000; i++) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
-        const size = Math.random() * 3 + 1;
-        const shade = Math.floor(Math.random() * 60) + 100;
+        const size = Math.random() * 4 + 0.5;
+        const shade = Math.floor(Math.random() * 80) + 80;
         ctx.fillStyle = `rgb(${shade}, ${shade - 20}, ${shade - 40})`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // Add some darker spots for depth
+    for (let i = 0; i < 2000; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 2 + 0.3;
+        const shade = Math.floor(Math.random() * 40) + 40;
+        ctx.fillStyle = `rgb(${shade}, ${shade - 10}, ${shade - 20})`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
@@ -438,55 +469,166 @@ function createFish() {
     return createFishSpecies(randomSpecies);
 }
 
-// Create an aquatic plant
+// Create an aquatic plant with multiple species
 function createPlant() {
     const plantGroup = new THREE.Group();
+    const plantType = Math.floor(Math.random() * 3);
+    
+    if (plantType === 0) {
+        // Tall grass-like plant
+        const stemGeometry = new THREE.CylinderGeometry(0.15, 0.15, 12, 8);
+        const stemMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2d5016,
+            metalness: 0.1,
+            roughness: 0.7
+        });
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+        stem.position.y = 6;
+        stem.castShadow = true;
+        stem.receiveShadow = true;
+        plantGroup.add(stem);
 
-    // Stem
-    const stemGeometry = new THREE.CylinderGeometry(0.15, 0.15, 12, 8);
-    const stemMaterial = new THREE.MeshStandardMaterial({
-        color: 0x2d5016,
-        metalness: 0.1,
-        roughness: 0.7
-    });
-    const stem = new THREE.Mesh(stemGeometry, stemMaterial);
-    stem.position.y = 6;
-    stem.castShadow = true;
-    stem.receiveShadow = true;
-    plantGroup.add(stem);
+        // Leaves
+        const leafMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4a7c2c,
+            metalness: 0.05,
+            roughness: 0.8,
+            side: THREE.DoubleSide
+        });
 
-    // Leaves
-    const leafMaterial = new THREE.MeshStandardMaterial({
-        color: 0x4a7c2c,
-        metalness: 0.05,
-        roughness: 0.8,
-        side: THREE.DoubleSide
-    });
+        for (let i = 0; i < 8; i++) {
+            const leafGeometry = new THREE.PlaneGeometry(1.5, 4);
+            const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+            leaf.position.y = 2 + i * 1.2;
+            leaf.rotation.z = (Math.PI / 4) * i;
+            leaf.rotation.x = Math.PI / 6;
+            leaf.castShadow = true;
+            leaf.receiveShadow = true;
+            plantGroup.add(leaf);
+        }
 
-    for (let i = 0; i < 8; i++) {
-        const leafGeometry = new THREE.PlaneGeometry(1.5, 4);
-        const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-        leaf.position.y = 2 + i * 1.2;
-        leaf.rotation.z = (Math.PI / 4) * i;
-        leaf.rotation.x = Math.PI / 6;
-        leaf.castShadow = true;
-        leaf.receiveShadow = true;
-        plantGroup.add(leaf);
+        // Root
+        const rootGeometry = new THREE.SphereGeometry(0.8, 8, 8);
+        const rootMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1a3a0a,
+            metalness: 0.1,
+            roughness: 0.9
+        });
+        const root = new THREE.Mesh(rootGeometry, rootMaterial);
+        root.position.y = -14.5;
+        root.scale.set(1, 0.5, 1);
+        root.castShadow = true;
+        root.receiveShadow = true;
+        plantGroup.add(root);
+        
+    } else if (plantType === 1) {
+        // Bushy plant with multiple stems
+        const stemMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3d6b1f,
+            metalness: 0.1,
+            roughness: 0.7
+        });
+        
+        for (let s = 0; s < 4; s++) {
+            const stemGeometry = new THREE.CylinderGeometry(0.12, 0.12, 10, 6);
+            const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+            stem.position.x = Math.cos(s * Math.PI / 2) * 0.8;
+            stem.position.z = Math.sin(s * Math.PI / 2) * 0.8;
+            stem.position.y = 5;
+            stem.castShadow = true;
+            stem.receiveShadow = true;
+            plantGroup.add(stem);
+        }
+        
+        // Bushy leaves
+        const leafMaterial = new THREE.MeshStandardMaterial({
+            color: 0x5a9d3d,
+            metalness: 0.05,
+            roughness: 0.8,
+            side: THREE.DoubleSide
+        });
+        
+        for (let i = 0; i < 12; i++) {
+            const leafGeometry = new THREE.PlaneGeometry(1.2, 3);
+            const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+            leaf.position.y = 1 + i * 0.8;
+            leaf.rotation.z = (Math.PI / 6) * i;
+            leaf.rotation.x = Math.PI / 5;
+            leaf.castShadow = true;
+            leaf.receiveShadow = true;
+            plantGroup.add(leaf);
+        }
+        
+        // Root cluster
+        const rootMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2a5a14,
+            metalness: 0.1,
+            roughness: 0.9
+        });
+        
+        for (let r = 0; r < 3; r++) {
+            const rootGeometry = new THREE.SphereGeometry(0.5, 6, 6);
+            const root = new THREE.Mesh(rootGeometry, rootMaterial);
+            root.position.x = Math.cos(r * Math.PI * 2 / 3) * 0.6;
+            root.position.z = Math.sin(r * Math.PI * 2 / 3) * 0.6;
+            root.position.y = -14.5;
+            root.scale.set(0.8, 0.4, 0.8);
+            root.castShadow = true;
+            root.receiveShadow = true;
+            plantGroup.add(root);
+        }
+        
+    } else {
+        // Feathery plant with fine leaves
+        const stemGeometry = new THREE.CylinderGeometry(0.1, 0.1, 11, 6);
+        const stemMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1d4d0a,
+            metalness: 0.1,
+            roughness: 0.7
+        });
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+        stem.position.y = 5.5;
+        stem.castShadow = true;
+        stem.receiveShadow = true;
+        plantGroup.add(stem);
+        
+        // Fine feathery leaves
+        const leafMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3d7a1f,
+            metalness: 0.05,
+            roughness: 0.8,
+            side: THREE.DoubleSide
+        });
+        
+        for (let i = 0; i < 16; i++) {
+            const leafGeometry = new THREE.PlaneGeometry(0.8, 3.5);
+            const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+            leaf.position.y = 1 + i * 0.7;
+            leaf.rotation.z = (Math.PI / 8) * i;
+            leaf.rotation.x = Math.PI / 4;
+            leaf.castShadow = true;
+            leaf.receiveShadow = true;
+            plantGroup.add(leaf);
+        }
+        
+        // Root
+        const rootGeometry = new THREE.SphereGeometry(0.6, 8, 8);
+        const rootMaterial = new THREE.MeshStandardMaterial({
+            color: 0x0d2a05,
+            metalness: 0.1,
+            roughness: 0.9
+        });
+        const root = new THREE.Mesh(rootGeometry, rootMaterial);
+        root.position.y = -14.5;
+        root.scale.set(1, 0.4, 1);
+        root.castShadow = true;
+        root.receiveShadow = true;
+        plantGroup.add(root);
     }
-
-    // Root
-    const rootGeometry = new THREE.SphereGeometry(0.8, 8, 8);
-    const rootMaterial = new THREE.MeshStandardMaterial({
-        color: 0x1a3a0a,
-        metalness: 0.1,
-        roughness: 0.9
-    });
-    const root = new THREE.Mesh(rootGeometry, rootMaterial);
-    root.position.y = -14.5;
-    root.scale.set(1, 0.5, 1);
-    root.castShadow = true;
-    root.receiveShadow = true;
-    plantGroup.add(root);
+    
+    plantGroup.userData = {
+        plantType: plantType
+    };
 
     // Animation properties
     plantGroup.userData = {
@@ -539,13 +681,42 @@ function addBubbles() {
 
 // Create a rock decoration
 function createRock() {
-    const rockGeometry = new THREE.IcosahedronGeometry(Math.random() * 1.5 + 1, 3);
-    const rockMaterial = new THREE.MeshStandardMaterial({
-        color: new THREE.Color().setHSL(0.1, 0.3, 0.4),
-        metalness: 0.1,
-        roughness: 0.9
-    });
-    const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+    const rockType = Math.floor(Math.random() * 3);
+    let rock;
+    
+    if (rockType === 0) {
+        // Large irregular rock
+        const rockGeometry = new THREE.IcosahedronGeometry(Math.random() * 1.5 + 1, 3);
+        const rockMaterial = new THREE.MeshStandardMaterial({
+            color: new THREE.Color().setHSL(0.1, 0.3, 0.4),
+            metalness: 0.1,
+            roughness: 0.9
+        });
+        rock = new THREE.Mesh(rockGeometry, rockMaterial);
+    } else if (rockType === 1) {
+        // Smooth rounded rock
+        const rockGeometry = new THREE.SphereGeometry(Math.random() * 1.2 + 0.8, 12, 12);
+        const rockMaterial = new THREE.MeshStandardMaterial({
+            color: new THREE.Color().setHSL(0.08, 0.25, 0.45),
+            metalness: 0.05,
+            roughness: 0.85
+        });
+        rock = new THREE.Mesh(rockGeometry, rockMaterial);
+    } else {
+        // Flat slate-like rock
+        const rockGeometry = new THREE.BoxGeometry(
+            Math.random() * 2 + 1.5,
+            Math.random() * 0.5 + 0.3,
+            Math.random() * 2 + 1.5
+        );
+        const rockMaterial = new THREE.MeshStandardMaterial({
+            color: new THREE.Color().setHSL(0.12, 0.2, 0.35),
+            metalness: 0.08,
+            roughness: 0.95
+        });
+        rock = new THREE.Mesh(rockGeometry, rockMaterial);
+    }
+    
     rock.castShadow = true;
     rock.receiveShadow = true;
     rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
