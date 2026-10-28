@@ -89,6 +89,14 @@
             color: #aaa;
             font-size: 0.85em;
             text-align: center;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -97,15 +105,22 @@
         <h1>🐠 3D Aquarium 🐠</h1>
         <canvas id="canvas"></canvas>
         <div class="controls">
-            <button onclick="toggleAutoRotate()">Toggle Auto-Rotate</button>
-            <button onclick="addFish()">Add Fish</button>
-            <button onclick="addPlant()">Add Plant</button>
-            <button onclick="resetView()">Reset View</button>
+            <div class="button-group">
+                <button onclick="toggleAutoRotate()">🔄 Auto-Rotate</button>
+                <button onclick="addFish()">➕ Fish</button>
+                <button onclick="addPlant()">🌿 Plant</button>
+                <button onclick="addRock()">🪨 Rock</button>
+            </div>
+            <div class="button-group">
+                <button onclick="toggleBubbles()">💧 Bubbles</button>
+                <button onclick="toggleSchooling()">🐟 Schooling</button>
+                <button onclick="resetView()">🔍 Reset View</button>
+            </div>
         </div>
         <div class="info">
             <p>Use mouse to rotate the view • Scroll to zoom</p>
             <div class="stats">
-                <p>Fish: <span id="fishCount">3</span> | Plants: <span id="plantCount">4</span></p>
+                <p>🐠 Fish: <span id="fishCount">3</span> | 🌿 Plants: <span id="plantCount">4</span> | 🪨 Rocks: <span id="rockCount">2</span> | 💧 Bubbles: <span id="bubbleCount">0</span></p>
             </div>
         </div>
     </div>

@@ -1,7 +1,9 @@
 // Three.js Aquarium Scene
 let scene, camera, renderer, controls;
-let aquarium, fish = [], plants = [];
+let aquarium, fish = [], plants = [], bubbles = [], decorations = [];
 let autoRotate = true;
+let showBubbles = true;
+let schoolingEnabled = true;
 
 // Initialize the scene
 function init() {
@@ -37,6 +39,14 @@ function init() {
     for (let i = 0; i < 4; i++) {
         addPlant();
     }
+    
+    // Add initial rocks
+    for (let i = 0; i < 2; i++) {
+        addRock();
+    }
+    
+    // Start bubble generation
+    setInterval(addBubbles, 500);
 
     // Mouse controls
     setupMouseControls();
@@ -345,6 +355,70 @@ function createPlant() {
     return plantGroup;
 }
 
+// Create a bubble
+function createBubble() {
+    const bubbleGeometry = new THREE.SphereGeometry(Math.random() * 0.3 + 0.1, 16, 16);
+    const bubbleMaterial = new THREE.MeshStandardMaterial({
+        color: 0xccffff,
+        metalness: 0.8,
+        roughness: 0.1,
+        transparent: true,
+        opacity: 0.6
+    });
+    const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+    
+    bubble.userData = {
+        velocity: Math.random() * 0.02 + 0.01,
+        wobble: Math.random() * 0.02,
+        wobblePhase: Math.random() * Math.PI * 2,
+        lifetime: Math.random() * 200 + 100,
+        age: 0
+    };
+    
+    return bubble;
+}
+
+// Add bubbles to the scene
+function addBubbles() {
+    if (!showBubbles) return;
+    
+    for (let i = 0; i < 3; i++) {
+        const bubble = createBubble();
+        const x = Math.random() * 30 - 15;
+        const y = Math.random() * 20 - 12;
+        const z = Math.random() * 20 - 10;
+        bubble.position.set(x, y, z);
+        scene.add(bubble);
+        bubbles.push(bubble);
+    }
+}
+
+// Create a rock decoration
+function createRock() {
+    const rockGeometry = new THREE.IcosahedronGeometry(Math.random() * 1.5 + 1, 3);
+    const rockMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(0.1, 0.3, 0.4),
+        metalness: 0.1,
+        roughness: 0.9
+    });
+    const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+    rock.castShadow = true;
+    rock.receiveShadow = true;
+    rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    return rock;
+}
+
+// Add rock to the scene
+function addRock() {
+    const rock = createRock();
+    const x = Math.random() * 30 - 15;
+    const z = Math.random() * 20 - 10;
+    rock.position.set(x, -13, z);
+    scene.add(rock);
+    decorations.push(rock);
+    updateStats();
+}
+
 // Add fish to the scene
 function addFish() {
     const fish_obj = createFish();
@@ -370,8 +444,28 @@ function addPlant() {
 
 // Update fish positions and animations
 function updateFish() {
-    fish.forEach(f => {
+    fish.forEach((f, index) => {
         const data = f.userData;
+
+        // Schooling behavior - fish tend to move together
+        if (schoolingEnabled && index > 0) {
+            const nearbyFish = fish.filter((other, i) => {
+                const dist = f.position.distanceTo(other.position);
+                return dist < 8 && i !== index;
+            });
+            
+            if (nearbyFish.length > 0) {
+                // Average direction of nearby fish
+                let avgAngle = 0;
+                nearbyFish.forEach(other => {
+                    avgAngle += other.userData.angle;
+                });
+                avgAngle /= nearbyFish.length;
+                
+                // Gradually align with school
+                data.angle += (avgAngle - data.angle) * 0.02;
+            }
+        }
 
         // Swimming motion
         data.angle += data.speed;
@@ -403,6 +497,31 @@ function updatePlants() {
         const data = p.userData;
         data.swayPhase += data.swaySpeed;
         p.rotation.z = Math.sin(data.swayPhase) * data.swayAmount;
+    });
+}
+
+// Update bubbles
+function updateBubbles() {
+    bubbles = bubbles.filter(bubble => {
+        const data = bubble.userData;
+        data.age++;
+        
+        // Move bubble up
+        bubble.position.y += data.velocity;
+        
+        // Wobble motion
+        data.wobblePhase += data.wobble;
+        bubble.position.x += Math.sin(data.wobblePhase) * 0.01;
+        
+        // Fade out as it rises
+        bubble.material.opacity = 0.6 * (1 - data.age / data.lifetime);
+        
+        // Remove old bubbles
+        if (data.age > data.lifetime) {
+            scene.remove(bubble);
+            return false;
+        }
+        return true;
     });
 }
 
@@ -447,6 +566,7 @@ function animate() {
     // Update animations
     updateFish();
     updatePlants();
+    updateBubbles();
 
     // Auto-rotate
     if (autoRotate) {
@@ -459,6 +579,20 @@ function animate() {
 // Toggle auto-rotate
 function toggleAutoRotate() {
     autoRotate = !autoRotate;
+}
+
+// Toggle bubbles
+function toggleBubbles() {
+    showBubbles = !showBubbles;
+    if (!showBubbles) {
+        bubbles.forEach(b => scene.remove(b));
+        bubbles = [];
+    }
+}
+
+// Toggle schooling
+function toggleSchooling() {
+    schoolingEnabled = !schoolingEnabled;
 }
 
 // Reset view
@@ -482,6 +616,8 @@ function onWindowResize() {
 function updateStats() {
     document.getElementById('fishCount').textContent = fish.length;
     document.getElementById('plantCount').textContent = plants.length;
+    document.getElementById('rockCount').textContent = decorations.length;
+    document.getElementById('bubbleCount').textContent = bubbles.length;
 }
 
 // Start the application
