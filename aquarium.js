@@ -211,14 +211,42 @@ function createFrame(width, height, depth, parentGroup) {
     parentGroup.add(bottomFrame);
 }
 
-// Create a realistic fish
-function createFish() {
+// Create different fish species
+function createFishSpecies(species = 'default') {
     const fishGroup = new THREE.Group();
+    let bodyColor, bodySize, headSize, tailSize;
+    
+    // Define species characteristics
+    switch(species) {
+        case 'goldfish':
+            bodyColor = new THREE.Color(0xffa500);
+            bodySize = { radius: 1.2, length: 3.5 };
+            headSize = 1.0;
+            tailSize = 1.3;
+            break;
+        case 'tropical':
+            bodyColor = new THREE.Color().setHSL(Math.random(), 0.9, 0.5);
+            bodySize = { radius: 1.0, length: 3.0 };
+            headSize = 0.9;
+            tailSize = 1.2;
+            break;
+        case 'large':
+            bodyColor = new THREE.Color().setHSL(Math.random() * 0.3, 0.6, 0.4);
+            bodySize = { radius: 2.0, length: 5.0 };
+            headSize = 1.5;
+            tailSize = 1.8;
+            break;
+        default:
+            bodyColor = new THREE.Color().setHSL(Math.random(), 0.7, 0.5);
+            bodySize = { radius: 1.5, length: 4 };
+            headSize = 1.2;
+            tailSize = 1.5;
+    }
 
     // Body
-    const bodyGeometry = new THREE.CapsuleGeometry(1.5, 4, 4, 8);
+    const bodyGeometry = new THREE.CapsuleGeometry(bodySize.radius, bodySize.length, 4, 8);
     const bodyMaterial = new THREE.MeshStandardMaterial({
-        color: new THREE.Color().setHSL(Math.random(), 0.7, 0.5),
+        color: bodyColor,
         metalness: 0.3,
         roughness: 0.4
     });
@@ -228,9 +256,9 @@ function createFish() {
     fishGroup.add(body);
 
     // Head
-    const headGeometry = new THREE.SphereGeometry(1.2, 16, 16);
+    const headGeometry = new THREE.SphereGeometry(headSize, 16, 16);
     const head = new THREE.Mesh(headGeometry, bodyMaterial);
-    head.position.z = 2.5;
+    head.position.z = bodySize.length / 2 + headSize * 0.5;
     head.scale.set(1, 0.9, 0.8);
     head.castShadow = true;
     head.receiveShadow = true;
@@ -244,13 +272,13 @@ function createFish() {
         roughness: 0.2
     });
     const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    eye.position.set(0.5, 0.5, 3);
+    eye.position.set(0.5, 0.5, bodySize.length / 2 + headSize + 0.5);
     fishGroup.add(eye);
 
     // Tail
-    const tailGeometry = new THREE.ConeGeometry(1.5, 3, 8);
+    const tailGeometry = new THREE.ConeGeometry(tailSize, 3, 8);
     const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
-    tail.position.z = -2.5;
+    tail.position.z = -bodySize.length / 2 - 1;
     tail.rotation.y = Math.PI / 2;
     tail.castShadow = true;
     tail.receiveShadow = true;
@@ -259,27 +287,27 @@ function createFish() {
     // Dorsal fin
     const finGeometry = new THREE.ConeGeometry(0.8, 2, 8);
     const finMaterial = new THREE.MeshStandardMaterial({
-        color: bodyMaterial.color,
+        color: bodyColor,
         metalness: 0.2,
         roughness: 0.5,
         transparent: true,
         opacity: 0.8
     });
     const dorsalFin = new THREE.Mesh(finGeometry, finMaterial);
-    dorsalFin.position.set(0, 1.8, 0);
+    dorsalFin.position.set(0, bodySize.radius + 1, 0);
     dorsalFin.rotation.z = Math.PI / 2;
     dorsalFin.scale.set(0.6, 1, 1);
     fishGroup.add(dorsalFin);
 
     // Pectoral fins
     const pectoralFin = new THREE.Mesh(finGeometry, finMaterial);
-    pectoralFin.position.set(1.5, 0, 0.5);
+    pectoralFin.position.set(bodySize.radius + 0.5, 0, 0.5);
     pectoralFin.rotation.z = Math.PI / 3;
     pectoralFin.scale.set(0.5, 0.8, 1);
     fishGroup.add(pectoralFin);
 
     const pectoralFin2 = pectoralFin.clone();
-    pectoralFin2.position.x = -1.5;
+    pectoralFin2.position.x = -(bodySize.radius + 0.5);
     fishGroup.add(pectoralFin2);
 
     // Animation properties
@@ -288,10 +316,18 @@ function createFish() {
         angle: Math.random() * Math.PI * 2,
         depth: Math.random() * 10 - 5,
         tailWave: 0,
-        finWave: 0
+        finWave: 0,
+        species: species
     };
 
     return fishGroup;
+}
+
+// Create a realistic fish (default species)
+function createFish() {
+    const species = ['default', 'goldfish', 'tropical', 'large'];
+    const randomSpecies = species[Math.floor(Math.random() * species.length)];
+    return createFishSpecies(randomSpecies);
 }
 
 // Create an aquatic plant
@@ -410,6 +446,11 @@ function createRock() {
 
 // Add rock to the scene
 function addRock() {
+    // Limit to 10 rocks for performance
+    if (decorations.length >= 10) {
+        alert('Maximum 10 rocks allowed for performance');
+        return;
+    }
     const rock = createRock();
     const x = Math.random() * 30 - 15;
     const z = Math.random() * 20 - 10;
@@ -421,6 +462,11 @@ function addRock() {
 
 // Add fish to the scene
 function addFish() {
+    // Limit to 20 fish for performance
+    if (fish.length >= 20) {
+        alert('Maximum 20 fish allowed for performance');
+        return;
+    }
     const fish_obj = createFish();
     const x = Math.random() * 30 - 15;
     const y = Math.random() * 15 - 5;
@@ -433,6 +479,11 @@ function addFish() {
 
 // Add plant to the scene
 function addPlant() {
+    // Limit to 15 plants for performance
+    if (plants.length >= 15) {
+        alert('Maximum 15 plants allowed for performance');
+        return;
+    }
     const plant = createPlant();
     const x = Math.random() * 30 - 15;
     const z = Math.random() * 20 - 10;
@@ -599,6 +650,27 @@ function toggleSchooling() {
 function resetView() {
     camera.position.set(0, 15, 25);
     aquarium.rotation.set(0, 0, 0);
+}
+
+// Clear all objects
+function clearAll() {
+    // Remove all fish
+    fish.forEach(f => scene.remove(f));
+    fish = [];
+    
+    // Remove all plants
+    plants.forEach(p => scene.remove(p));
+    plants = [];
+    
+    // Remove all rocks
+    decorations.forEach(d => scene.remove(d));
+    decorations = [];
+    
+    // Remove all bubbles
+    bubbles.forEach(b => scene.remove(b));
+    bubbles = [];
+    
+    updateStats();
 }
 
 // Handle window resize
