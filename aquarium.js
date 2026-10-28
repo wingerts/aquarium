@@ -214,111 +214,215 @@ function createFrame(width, height, depth, parentGroup) {
 // Create different fish species
 function createFishSpecies(species = 'default') {
     const fishGroup = new THREE.Group();
-    let bodyColor, bodySize, headSize, tailSize;
+    let bodyColor, accentColor, bodySize, headSize, tailSize, finSize;
     
     // Define species characteristics
     switch(species) {
         case 'goldfish':
-            bodyColor = new THREE.Color(0xffa500);
-            bodySize = { radius: 1.2, length: 3.5 };
-            headSize = 1.0;
-            tailSize = 1.3;
+            bodyColor = new THREE.Color(0xff8c00);
+            accentColor = new THREE.Color(0xffd700);
+            bodySize = { radiusFront: 1.4, radiusBack: 0.8, length: 4.0 };
+            headSize = 1.3;
+            tailSize = { width: 2.5, height: 2.0 };
+            finSize = 1.2;
             break;
         case 'tropical':
-            bodyColor = new THREE.Color().setHSL(Math.random(), 0.9, 0.5);
-            bodySize = { radius: 1.0, length: 3.0 };
-            headSize = 0.9;
-            tailSize = 1.2;
+            bodyColor = new THREE.Color().setHSL(Math.random(), 0.95, 0.55);
+            accentColor = new THREE.Color().setHSL((Math.random() + 0.5) % 1, 0.9, 0.7);
+            bodySize = { radiusFront: 1.1, radiusBack: 0.6, length: 3.5 };
+            headSize = 1.0;
+            tailSize = { width: 2.0, height: 1.8 };
+            finSize = 1.0;
             break;
-        case 'large':
-            bodyColor = new THREE.Color().setHSL(Math.random() * 0.3, 0.6, 0.4);
-            bodySize = { radius: 2.0, length: 5.0 };
-            headSize = 1.5;
-            tailSize = 1.8;
+        case 'angelfish':
+            bodyColor = new THREE.Color(0x4169e1);
+            accentColor = new THREE.Color(0x87ceeb);
+            bodySize = { radiusFront: 0.8, radiusBack: 0.5, length: 2.5 };
+            headSize = 0.8;
+            tailSize = { width: 1.5, height: 3.0 };
+            finSize = 2.0;
+            break;
+        case 'koi':
+            bodyColor = new THREE.Color(0xffffff);
+            accentColor = new THREE.Color(0xff4500);
+            bodySize = { radiusFront: 1.8, radiusBack: 1.0, length: 5.5 };
+            headSize = 1.6;
+            tailSize = { width: 3.0, height: 2.5 };
+            finSize = 1.5;
             break;
         default:
-            bodyColor = new THREE.Color().setHSL(Math.random(), 0.7, 0.5);
-            bodySize = { radius: 1.5, length: 4 };
-            headSize = 1.2;
-            tailSize = 1.5;
+            bodyColor = new THREE.Color().setHSL(Math.random(), 0.75, 0.55);
+            accentColor = new THREE.Color().setHSL(Math.random(), 0.6, 0.7);
+            bodySize = { radiusFront: 1.5, radiusBack: 0.8, length: 4.5 };
+            headSize = 1.3;
+            tailSize = { width: 2.2, height: 2.0 };
+            finSize = 1.2;
     }
 
-    // Body - using CylinderGeometry (CapsuleGeometry not available in Three.js r128)
-    const bodyGeometry = new THREE.CylinderGeometry(bodySize.radius, bodySize.radius * 0.7, bodySize.length, 8);
-    bodyGeometry.rotateZ(Math.PI / 2); // Rotate to horizontal
-    const bodyMaterial = new THREE.MeshStandardMaterial({
+    // Create realistic body using multiple spheres for smooth ellipsoid shape
+    const bodyMaterial = new THREE.MeshPhongMaterial({
         color: bodyColor,
-        metalness: 0.3,
-        roughness: 0.4
+        shininess: 80,
+        specular: 0x444444,
+        reflectivity: 0.5
     });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.castShadow = true;
-    body.receiveShadow = true;
-    fishGroup.add(body);
 
-    // Head
-    const headGeometry = new THREE.SphereGeometry(headSize, 16, 16);
+    // Main body segments for smooth fish shape
+    const segments = 5;
+    for (let i = 0; i < segments; i++) {
+        const t = i / (segments - 1);
+        const radius = bodySize.radiusFront * (1 - t) + bodySize.radiusBack * t;
+        const segmentGeometry = new THREE.SphereGeometry(radius, 16, 16);
+        const segment = new THREE.Mesh(segmentGeometry, bodyMaterial);
+        segment.position.z = (t - 0.5) * bodySize.length;
+        segment.scale.set(1, 0.85, 1.2);
+        segment.castShadow = true;
+        segment.receiveShadow = true;
+        fishGroup.add(segment);
+    }
+
+    // Head with more detail
+    const headGeometry = new THREE.SphereGeometry(headSize, 20, 20);
     const head = new THREE.Mesh(headGeometry, bodyMaterial);
-    head.position.z = bodySize.length / 2 + headSize * 0.5;
-    head.scale.set(1, 0.9, 0.8);
+    head.position.z = bodySize.length / 2 + headSize * 0.4;
+    head.scale.set(0.9, 0.85, 0.75);
     head.castShadow = true;
     head.receiveShadow = true;
     fishGroup.add(head);
 
-    // Eye
-    const eyeGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-    const eyeMaterial = new THREE.MeshStandardMaterial({
-        color: 0x000000,
-        metalness: 0.8,
-        roughness: 0.2
+    // Eyes - more realistic with white and pupil
+    const eyeWhiteGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+    const eyeWhiteMaterial = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        shininess: 100
     });
-    const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    eye.position.set(0.5, 0.5, bodySize.length / 2 + headSize + 0.5);
-    fishGroup.add(eye);
+    const eyeLeft = new THREE.Mesh(eyeWhiteGeometry, eyeWhiteMaterial);
+    eyeLeft.position.set(headSize * 0.5, headSize * 0.3, bodySize.length / 2 + headSize * 0.6);
+    fishGroup.add(eyeLeft);
 
-    // Tail
-    const tailGeometry = new THREE.ConeGeometry(tailSize, 3, 8);
-    const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
-    tail.position.z = -bodySize.length / 2 - 1;
-    tail.rotation.y = Math.PI / 2;
+    const eyeRight = eyeLeft.clone();
+    eyeRight.position.x = -headSize * 0.5;
+    fishGroup.add(eyeRight);
+
+    // Pupils
+    const pupilGeometry = new THREE.SphereGeometry(0.18, 16, 16);
+    const pupilMaterial = new THREE.MeshPhongMaterial({
+        color: 0x000000,
+        shininess: 120
+    });
+    const pupilLeft = new THREE.Mesh(pupilGeometry, pupilMaterial);
+    pupilLeft.position.set(headSize * 0.5, headSize * 0.3, bodySize.length / 2 + headSize * 0.8);
+    fishGroup.add(pupilLeft);
+
+    const pupilRight = pupilLeft.clone();
+    pupilRight.position.x = -headSize * 0.5;
+    fishGroup.add(pupilRight);
+
+    // Mouth
+    const mouthGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+    const mouthMaterial = new THREE.MeshPhongMaterial({
+        color: 0x333333,
+        shininess: 20
+    });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, -headSize * 0.4, bodySize.length / 2 + headSize * 0.8);
+    mouth.scale.set(0.8, 0.5, 0.6);
+    fishGroup.add(mouth);
+
+    // Realistic tail fin - forked shape
+    const tailMaterial = new THREE.MeshPhongMaterial({
+        color: accentColor,
+        shininess: 60,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide
+    });
+
+    // Create forked tail with two lobes
+    const tailShape = new THREE.Shape();
+    tailShape.moveTo(0, 0);
+    tailShape.quadraticCurveTo(-tailSize.width * 0.3, tailSize.height * 0.4, -tailSize.width * 0.5, tailSize.height * 0.8);
+    tailShape.quadraticCurveTo(-tailSize.width * 0.6, tailSize.height * 0.5, -tailSize.width * 0.4, 0);
+    tailShape.quadraticCurveTo(-tailSize.width * 0.5, -tailSize.height * 0.3, -tailSize.width * 0.5, -tailSize.height * 0.6);
+    tailShape.quadraticCurveTo(-tailSize.width * 0.3, -tailSize.height * 0.3, 0, 0);
+    
+    const tailGeometry = new THREE.ShapeGeometry(tailShape);
+    const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+    tail.position.z = -bodySize.length / 2 - 0.5;
     tail.castShadow = true;
-    tail.receiveShadow = true;
     fishGroup.add(tail);
 
-    // Dorsal fin
-    const finGeometry = new THREE.ConeGeometry(0.8, 2, 8);
-    const finMaterial = new THREE.MeshStandardMaterial({
-        color: bodyColor,
-        metalness: 0.2,
-        roughness: 0.5,
-        transparent: true,
-        opacity: 0.8
-    });
-    const dorsalFin = new THREE.Mesh(finGeometry, finMaterial);
-    dorsalFin.position.set(0, bodySize.radius + 1, 0);
-    dorsalFin.rotation.z = Math.PI / 2;
-    dorsalFin.scale.set(0.6, 1, 1);
+    // Dorsal fin - tall and elegant
+    const dorsalFinShape = new THREE.Shape();
+    dorsalFinShape.moveTo(0, 0);
+    dorsalFinShape.quadraticCurveTo(finSize * 0.3, finSize * 1.5, finSize * 0.5, finSize * 2.0);
+    dorsalFinShape.quadraticCurveTo(finSize * 0.6, finSize * 1.2, finSize * 1.0, 0);
+    dorsalFinShape.lineTo(0, 0);
+    
+    const dorsalFinGeometry = new THREE.ShapeGeometry(dorsalFinShape);
+    const dorsalFin = new THREE.Mesh(dorsalFinGeometry, tailMaterial);
+    dorsalFin.position.set(0, bodySize.radiusFront * 0.9, bodySize.length * 0.1);
+    dorsalFin.rotation.x = Math.PI / 2;
+    dorsalFin.castShadow = true;
     fishGroup.add(dorsalFin);
 
-    // Pectoral fins
-    const pectoralFin = new THREE.Mesh(finGeometry, finMaterial);
-    pectoralFin.position.set(bodySize.radius + 0.5, 0, 0.5);
-    pectoralFin.rotation.z = Math.PI / 3;
-    pectoralFin.scale.set(0.5, 0.8, 1);
-    fishGroup.add(pectoralFin);
+    // Pectoral fins - side fins
+    const pectoralFinShape = new THREE.Shape();
+    pectoralFinShape.moveTo(0, 0);
+    pectoralFinShape.quadraticCurveTo(finSize * 0.4, finSize * 0.3, finSize * 0.8, finSize * 0.5);
+    pectoralFinShape.quadraticCurveTo(finSize * 0.6, finSize * 0.3, finSize * 0.4, 0);
+    pectoralFinShape.lineTo(0, 0);
+    
+    const pectoralFinGeometry = new THREE.ShapeGeometry(pectoralFinShape);
+    const pectoralFinLeft = new THREE.Mesh(pectoralFinGeometry, tailMaterial);
+    pectoralFinLeft.position.set(bodySize.radiusFront * 0.8, -bodySize.radiusFront * 0.3, bodySize.length * 0.2);
+    pectoralFinLeft.rotation.set(Math.PI / 6, -Math.PI / 3, Math.PI / 2);
+    pectoralFinLeft.castShadow = true;
+    fishGroup.add(pectoralFinLeft);
 
-    const pectoralFin2 = pectoralFin.clone();
-    pectoralFin2.position.x = -(bodySize.radius + 0.5);
-    fishGroup.add(pectoralFin2);
+    const pectoralFinRight = pectoralFinLeft.clone();
+    pectoralFinRight.position.x = -bodySize.radiusFront * 0.8;
+    pectoralFinRight.rotation.set(Math.PI / 6, Math.PI / 3, -Math.PI / 2);
+    fishGroup.add(pectoralFinRight);
+
+    // Ventral fin - bottom fin
+    const ventralFin = new THREE.Mesh(pectoralFinGeometry, tailMaterial);
+    ventralFin.position.set(0, -bodySize.radiusFront * 0.9, -bodySize.length * 0.1);
+    ventralFin.rotation.x = -Math.PI / 2;
+    ventralFin.scale.set(0.7, 0.7, 1);
+    ventralFin.castShadow = true;
+    fishGroup.add(ventralFin);
+
+    // Scales effect with subtle stripes
+    const stripeCount = 3;
+    for (let i = 0; i < stripeCount; i++) {
+        const stripeGeometry = new THREE.SphereGeometry(bodySize.radiusFront * 0.95, 16, 16);
+        const stripeMaterial = new THREE.MeshPhongMaterial({
+            color: accentColor,
+            shininess: 90,
+            transparent: true,
+            opacity: 0.3
+        });
+        const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+        const pos = (i / stripeCount - 0.3) * bodySize.length;
+        stripe.position.z = pos;
+        stripe.scale.set(1, 0.85, 0.3);
+        fishGroup.add(stripe);
+    }
 
     // Animation properties
     fishGroup.userData = {
-        speed: Math.random() * 0.02 + 0.01,
+        speed: Math.random() * 0.015 + 0.01,
         angle: Math.random() * Math.PI * 2,
         depth: Math.random() * 10 - 5,
         tailWave: 0,
         finWave: 0,
-        species: species
+        bodyWave: 0,
+        species: species,
+        tailIndex: fishGroup.children.length - 8, // Index of tail for animation
+        dorsalFinIndex: fishGroup.children.length - 7,
+        pectoralLeftIndex: fishGroup.children.length - 6,
+        pectoralRightIndex: fishGroup.children.length - 5
     };
 
     return fishGroup;
@@ -326,7 +430,7 @@ function createFishSpecies(species = 'default') {
 
 // Create a realistic fish (default species)
 function createFish() {
-    const species = ['default', 'goldfish', 'tropical', 'large'];
+    const species = ['default', 'goldfish', 'tropical', 'angelfish', 'koi'];
     const randomSpecies = species[Math.floor(Math.random() * species.length)];
     return createFishSpecies(randomSpecies);
 }
@@ -519,27 +623,73 @@ function updateFish() {
             }
         }
 
-        // Swimming motion
-        data.angle += data.speed;
+        // Swimming motion with slight randomness
+        data.angle += (Math.random() - 0.5) * 0.02;
         f.position.x += Math.cos(data.angle) * data.speed * 2;
         f.position.z += Math.sin(data.angle) * data.speed * 2;
 
-        // Keep fish in bounds
-        if (Math.abs(f.position.x) > 18) data.angle += Math.PI;
-        if (Math.abs(f.position.z) > 13) data.angle += Math.PI;
+        // Vertical movement - gentle bobbing
+        f.position.y += Math.sin(Date.now() * 0.0005 + index) * 0.02;
+
+        // Keep fish in bounds with smooth turning
+        if (Math.abs(f.position.x) > 18) {
+            data.angle += Math.PI * 0.1;
+            f.position.x = Math.max(-18, Math.min(18, f.position.x));
+        }
+        if (Math.abs(f.position.z) > 13) {
+            data.angle += Math.PI * 0.1;
+            f.position.z = Math.max(-13, Math.min(13, f.position.z));
+        }
         if (f.position.y > 12) f.position.y = 12;
         if (f.position.y < -12) f.position.y = -12;
 
-        // Tail animation
-        data.tailWave += 0.1;
-        f.children[2].rotation.z = Math.sin(data.tailWave) * 0.3;
+        // Enhanced tail animation - more fluid
+        data.tailWave += 0.15;
+        const tailChild = f.children[data.tailIndex];
+        if (tailChild) {
+            tailChild.rotation.y = Math.sin(data.tailWave) * 0.4;
+            tailChild.rotation.z = Math.sin(data.tailWave) * 0.2;
+        }
 
-        // Fin animation
-        data.finWave += 0.08;
-        f.children[4].rotation.x = Math.sin(data.finWave) * 0.2;
+        // Dorsal fin animation
+        const dorsalFin = f.children[data.dorsalFinIndex];
+        if (dorsalFin) {
+            dorsalFin.rotation.z = Math.sin(data.tailWave * 0.8) * 0.1;
+        }
 
-        // Face direction
-        f.rotation.y = data.angle;
+        // Pectoral fins animation - alternating movement
+        data.finWave += 0.12;
+        const pectoralLeft = f.children[data.pectoralLeftIndex];
+        const pectoralRight = f.children[data.pectoralRightIndex];
+        if (pectoralLeft && pectoralRight) {
+            pectoralLeft.rotation.y = Math.sin(data.finWave) * 0.3;
+            pectoralRight.rotation.y = Math.sin(data.finWave + Math.PI) * 0.3;
+        }
+
+        // Body undulation - make body segments wave
+        data.bodyWave += 0.1;
+        for (let i = 0; i < 5; i++) {
+            const segment = f.children[i];
+            if (segment) {
+                const phase = data.bodyWave + i * 0.3;
+                segment.rotation.y = Math.sin(phase) * 0.05;
+                segment.position.y = Math.sin(phase) * 0.1;
+            }
+        }
+
+        // Face direction with smooth rotation
+        const targetRotation = data.angle;
+        const currentRotation = f.rotation.y;
+        let rotationDiff = targetRotation - currentRotation;
+        
+        // Normalize rotation difference to [-PI, PI]
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        f.rotation.y += rotationDiff * 0.1;
+
+        // Slight pitch based on vertical movement
+        f.rotation.x = Math.sin(Date.now() * 0.001 + index) * 0.1;
     });
 }
 
