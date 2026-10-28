@@ -129,18 +129,22 @@ function createAquarium() {
     // Bottom (gravel)
     createGravelFloor(width, depth, group);
 
-    // Top (water surface effect)
+    // Top (water surface effect with animation)
     const topGeometry = new THREE.PlaneGeometry(width, depth);
     const topMaterial = new THREE.MeshStandardMaterial({
         color: 0xccddff,
-        metalness: 0.3,
-        roughness: 0.2,
-        emissive: 0x4488ff,
-        emissiveIntensity: 0.1
+        metalness: 0.4,
+        roughness: 0.15,
+        emissive: 0x5599ff,
+        emissiveIntensity: 0.15
     });
     const top = new THREE.Mesh(topGeometry, topMaterial);
     top.rotation.x = Math.PI / 2;
     top.position.y = height / 2;
+    top.userData = {
+        baseY: height / 2,
+        wavePhase: 0
+    };
     group.add(top);
 
     // Frame (dark edges)
@@ -280,6 +284,22 @@ function createFishSpecies(species = 'default') {
             headSize = 1.6;
             tailSize = { width: 3.0, height: 2.5 };
             finSize = 1.5;
+            break;
+        case 'tetra':
+            bodyColor = new THREE.Color(0xff3333);
+            accentColor = new THREE.Color(0xffff00);
+            bodySize = { radiusFront: 0.6, radiusBack: 0.4, length: 2.0 };
+            headSize = 0.6;
+            tailSize = { width: 1.2, height: 1.5 };
+            finSize = 0.7;
+            break;
+        case 'pleco':
+            bodyColor = new THREE.Color(0x4a4a4a);
+            accentColor = new THREE.Color(0x666666);
+            bodySize = { radiusFront: 1.3, radiusBack: 0.9, length: 4.2 };
+            headSize = 1.1;
+            tailSize = { width: 2.0, height: 1.8 };
+            finSize = 1.3;
             break;
         default:
             bodyColor = new THREE.Color().setHSL(Math.random(), 0.75, 0.55);
@@ -464,7 +484,7 @@ function createFishSpecies(species = 'default') {
 
 // Create a realistic fish (default species)
 function createFish() {
-    const species = ['default', 'goldfish', 'tropical', 'angelfish', 'koi'];
+    const species = ['default', 'goldfish', 'tropical', 'angelfish', 'koi', 'tetra', 'pleco'];
     const randomSpecies = species[Math.floor(Math.random() * species.length)];
     return createFishSpecies(randomSpecies);
 }
@@ -964,6 +984,16 @@ function animate() {
     updateFish();
     updatePlants();
     updateBubbles();
+    
+    // Update water surface animation
+    if (aquarium && aquarium.children.length > 0) {
+        const waterSurface = aquarium.children.find(child => child.userData && child.userData.baseY);
+        if (waterSurface) {
+            waterSurface.userData.wavePhase += 0.01;
+            waterSurface.position.y = waterSurface.userData.baseY + Math.sin(waterSurface.userData.wavePhase) * 0.15;
+            waterSurface.rotation.z = Math.sin(waterSurface.userData.wavePhase * 0.5) * 0.02;
+        }
+    }
 
     // Auto-rotate
     if (autoRotate) {
