@@ -633,7 +633,9 @@ function addPlant() {
     const plant = createPlant();
     const x = Math.random() * 30 - 15;
     const z = Math.random() * 20 - 10;
-    plant.position.set(x, 0, z);
+    // Position plant so roots are attached to the bottom of the aquarium (y = -15)
+    // Plant roots are at y = -0.25 relative to plant group, so position group at y = -14.75
+    plant.position.set(x, -14.75, z);
     scene.add(plant);
     plants.push(plant);
     updateStats();
