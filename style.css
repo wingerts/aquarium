@@ -1,0 +1,168 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #87CEEB, #4682B4);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#aquarium {
+    width: 800px;
+    height: 600px;
+    background: linear-gradient(to bottom, #1e90ff 0%, #006994 50%, #004d6b 100%);
+    border: 10px solid #8B4513;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Plants are attached to the aquarium bottom */
+.plant {
+    position: absolute;
+    bottom: 0; /* Attached to the bottom */
+    width: 40px;
+    background: linear-gradient(to top, #228B22, #32CD32);
+    border-radius: 20px 20px 0 0;
+    transform-origin: bottom center;
+    animation: sway 3s ease-in-out infinite;
+}
+
+.plant::before,
+.plant::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to top, #228B22, #32CD32);
+    border-radius: 15px 15px 0 0;
+}
+
+.plant::before {
+    left: -25px;
+    height: 80%;
+    animation: sway 2.5s ease-in-out infinite;
+}
+
+.plant::after {
+    right: -25px;
+    height: 70%;
+    animation: sway 3.5s ease-in-out infinite;
+}
+
+.plant-1 {
+    left: 100px;
+    height: 150px;
+}
+
+.plant-2 {
+    left: 350px;
+    height: 180px;
+    animation-delay: -1s;
+}
+
+.plant-3 {
+    left: 650px;
+    height: 140px;
+    animation-delay: -2s;
+}
+
+@keyframes sway {
+    0%, 100% {
+        transform: rotate(-5deg);
+    }
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+/* Fish swimming in the aquarium */
+.fish {
+    position: absolute;
+    width: 60px;
+    height: 30px;
+    background: linear-gradient(to right, #FF6347, #FF4500);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    animation: swim 10s linear infinite;
+}
+
+.fish::before {
+    content: '';
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid #FF4500;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+}
+
+.fish::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    background: black;
+    border-radius: 50%;
+}
+
+.fish-1 {
+    top: 150px;
+    animation-duration: 12s;
+}
+
+.fish-2 {
+    top: 300px;
+    animation-duration: 15s;
+    animation-delay: -5s;
+    background: linear-gradient(to right, #FFD700, #FFA500);
+}
+
+.fish-2::before {
+    border-left-color: #FFA500;
+}
+
+@keyframes swim {
+    0% {
+        left: -80px;
+        transform: scaleX(1);
+    }
+    48% {
+        transform: scaleX(1);
+    }
+    50% {
+        left: 100%;
+        transform: scaleX(1);
+    }
+    52% {
+        transform: scaleX(-1);
+    }
+    98% {
+        transform: scaleX(-1);
+    }
+    100% {
+        left: -80px;
+        transform: scaleX(-1);
+    }
+}
