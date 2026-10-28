@@ -243,8 +243,9 @@ function createFishSpecies(species = 'default') {
             tailSize = 1.5;
     }
 
-    // Body
-    const bodyGeometry = new THREE.CapsuleGeometry(bodySize.radius, bodySize.length, 4, 8);
+    // Body - using CylinderGeometry (CapsuleGeometry not available in Three.js r128)
+    const bodyGeometry = new THREE.CylinderGeometry(bodySize.radius, bodySize.radius * 0.7, bodySize.length, 8);
+    bodyGeometry.rotateZ(Math.PI / 2); // Rotate to horizontal
     const bodyMaterial = new THREE.MeshStandardMaterial({
         color: bodyColor,
         metalness: 0.3,
