@@ -1,0 +1,8 @@
+# GitHub Pages configuration for static HTML
+# This disables Jekyll processing and serves files as-is
+markdown: kramdown
+exclude:
+  - .github
+  - node_modules
+  - .gitignore
+  - README.md
