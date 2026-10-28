@@ -434,6 +434,7 @@ function createFishSpecies(species = 'default') {
         bodySize: bodySize,
         headSize: headSize,
         tailSize: tailSize,
+        finSize: finSize,
         tailIndex: fishGroup.children.length - 3,
         dorsalFinIndex: fishGroup.children.length - 2,
         pectoralLeftIndex: fishGroup.children.length - 1,
@@ -675,25 +676,41 @@ function updateFish() {
         f.position.y += Math.sin(Date.now() * 0.0005 + index) * 0.02;
 
         // Keep fish in bounds with smooth turning, accounting for fish size
-        // Fish body extends from -length/2 to +length/2 in Z direction
-        // Fish body extends from -radius to +radius in X and Y directions
+        // Calculate the full extent of all fish parts
         const fishLength = data.bodySize.length;
-        const fishRadius = Math.max(data.bodySize.radiusFront, data.bodySize.radiusBack);
+        const fishRadiusFront = data.bodySize.radiusFront;
+        const fishRadiusBack = data.bodySize.radiusBack;
         const headSize = data.headSize;
-        const tailSize = data.tailSize.width;
+        const tailSize = data.tailSize;
+        const finSize = data.finSize || 1.0; // fallback for older fish without finSize
         
-        // Calculate total fish extent
-        const fishExtentZ = (fishLength / 2) + (tailSize / 2) + 0.5; // tail extends beyond body
-        const fishExtentX = fishRadius + 0.5;
-        const fishExtentY = fishRadius + headSize * 0.5;
+        // Z-axis extent: head extends forward, tail extends backward
+        // Head: positioned at bodySize.length/2 + headSize*0.4, with radius headSize (scaled 0.75 in z)
+        // Eyes extend to bodySize.length/2 + headSize*0.6 + 0.35 (eye radius)
+        // Tail: positioned at -bodySize.length/2 - tailSize.height/2
+        const headExtentZ = fishLength / 2 + headSize * 0.6 + 0.35; // eyes are the furthest forward
+        const tailExtentZ = fishLength / 2 + tailSize.height / 2; // tail extends backward
+        const fishExtentZ = Math.max(headExtentZ, tailExtentZ) + 0.5; // add margin
+        
+        // X-axis extent: pectoral fins extend outward
+        // Pectoral fins positioned at ±bodySize.radiusFront * 0.7, with length finSize
+        const pectoralExtentX = fishRadiusFront * 0.7 + finSize * 0.5;
+        const fishExtentX = Math.max(fishRadiusFront, pectoralExtentX) + 0.5; // add margin
+        
+        // Y-axis extent: dorsal fin extends upward, body extends downward
+        // Dorsal fin: positioned at bodySize.radiusFront * 0.8, with length finSize * 1.5
+        const dorsalExtentY = fishRadiusFront * 0.8 + finSize * 1.5;
+        const bodyExtentY = Math.max(fishRadiusFront, headSize * 0.85);
+        const fishExtentY = Math.max(dorsalExtentY, bodyExtentY) + 0.5; // add margin
         
         // Aquarium water bounds (with some margin from glass)
-        const maxX = 19 - fishExtentX;
-        const minX = -19 + fishExtentX;
-        const maxZ = 14 - fishExtentZ;
-        const minZ = -14 + fishExtentZ;
-        const maxY = 13 - fishExtentY;
-        const minY = -13 + fishExtentY;
+        // Aquarium dimensions: width=40 (x: -20 to 20), depth=30 (z: -15 to 15), height=30 (y: -15 to 15)
+        const maxX = 20 - fishExtentX;
+        const minX = -20 + fishExtentX;
+        const maxZ = 15 - fishExtentZ;
+        const minZ = -15 + fishExtentZ;
+        const maxY = 15 - fishExtentY;
+        const minY = -15 + fishExtentY;
         
         // Boundary checking with smooth turning
         if (f.position.x > maxX || f.position.x < minX) {
