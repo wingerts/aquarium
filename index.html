@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Aquarium</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #canvas {
+            width: 100%;
+            height: 600px;
+            display: block;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .info {
+            margin-top: 20px;
+            color: #fff;
+            text-align: center;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .stats {
+            margin-top: 10px;
+            color: #aaa;
+            font-size: 0.85em;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐠 3D Aquarium 🐠</h1>
+        <canvas id="canvas"></canvas>
+        <div class="controls">
+            <div class="button-group">
+                <button onclick="toggleAutoRotate()">🔄 Auto-Rotate</button>
+                <button onclick="addFish()">➕ Fish</button>
+                <button onclick="addPlant()">🌿 Plant</button>
+                <button onclick="addRock()">🪨 Rock</button>
+            </div>
+            <div class="button-group">
+                <button onclick="toggleBubbles()">💧 Bubbles</button>
+                <button onclick="toggleSchooling()">🐟 Schooling</button>
+                <button onclick="resetView()">🔍 Reset View</button>
+                <button onclick="clearAll()">🗑️ Clear All</button>
+            </div>
+        </div>
+        <div class="info">
+            <p>Use mouse to rotate the view • Scroll to zoom</p>
+            <div class="stats">
+                <p>🐠 Fish: <span id="fishCount">3</span> | 🌿 Plants: <span id="plantCount">4</span> | 🪨 Rocks: <span id="rockCount">2</span> | 💧 Bubbles: <span id="bubbleCount">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="aquarium.js"></script>
+</body>
+</html>
