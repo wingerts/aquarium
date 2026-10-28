@@ -422,7 +422,10 @@ function createFishSpecies(species = 'default') {
         tailIndex: fishGroup.children.length - 8, // Index of tail for animation
         dorsalFinIndex: fishGroup.children.length - 7,
         pectoralLeftIndex: fishGroup.children.length - 6,
-        pectoralRightIndex: fishGroup.children.length - 5
+        pectoralRightIndex: fishGroup.children.length - 5,
+        bodySize: bodySize,
+        headSize: headSize,
+        tailSize: tailSize
     };
 
     return fishGroup;
@@ -631,17 +634,38 @@ function updateFish() {
         // Vertical movement - gentle bobbing
         f.position.y += Math.sin(Date.now() * 0.0005 + index) * 0.02;
 
-        // Keep fish in bounds with smooth turning
-        if (Math.abs(f.position.x) > 18) {
+        // Keep fish in bounds with smooth turning, accounting for fish size
+        // Fish body extends from -length/2 to +length/2 in Z direction
+        // Fish body extends from -radius to +radius in X and Y directions
+        const fishLength = data.bodySize.length;
+        const fishRadius = Math.max(data.bodySize.radiusFront, data.bodySize.radiusBack);
+        const headSize = data.headSize;
+        const tailSize = data.tailSize.width;
+        
+        // Calculate total fish extent
+        const fishExtentZ = (fishLength / 2) + (tailSize / 2) + 0.5; // tail extends beyond body
+        const fishExtentX = fishRadius + 0.5;
+        const fishExtentY = fishRadius + headSize * 0.5;
+        
+        // Aquarium water bounds (with some margin from glass)
+        const maxX = 19 - fishExtentX;
+        const minX = -19 + fishExtentX;
+        const maxZ = 14 - fishExtentZ;
+        const minZ = -14 + fishExtentZ;
+        const maxY = 13 - fishExtentY;
+        const minY = -13 + fishExtentY;
+        
+        // Boundary checking with smooth turning
+        if (f.position.x > maxX || f.position.x < minX) {
             data.angle += Math.PI * 0.1;
-            f.position.x = Math.max(-18, Math.min(18, f.position.x));
+            f.position.x = Math.max(minX, Math.min(maxX, f.position.x));
         }
-        if (Math.abs(f.position.z) > 13) {
+        if (f.position.z > maxZ || f.position.z < minZ) {
             data.angle += Math.PI * 0.1;
-            f.position.z = Math.max(-13, Math.min(13, f.position.z));
+            f.position.z = Math.max(minZ, Math.min(maxZ, f.position.z));
         }
-        if (f.position.y > 12) f.position.y = 12;
-        if (f.position.y < -12) f.position.y = -12;
+        if (f.position.y > maxY) f.position.y = maxY;
+        if (f.position.y < minY) f.position.y = minY;
 
         // Enhanced tail animation - more fluid
         data.tailWave += 0.15;
