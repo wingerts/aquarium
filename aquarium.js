@@ -246,10 +246,55 @@ function createFrame(width, height, depth, parentGroup) {
     parentGroup.add(bottomFrame);
 }
 
+// Create procedural scale texture for realistic fish skin
+function createScaleTexture(baseColor) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    
+    // Base color
+    ctx.fillStyle = `rgb(${baseColor.r * 255}, ${baseColor.g * 255}, ${baseColor.b * 255})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw scales pattern
+    const scaleSize = 12;
+    const rows = Math.ceil(canvas.height / (scaleSize * 0.7));
+    const cols = Math.ceil(canvas.width / scaleSize);
+    
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const x = col * scaleSize + (row % 2) * (scaleSize / 2);
+            const y = row * scaleSize * 0.7;
+            
+            // Scale outline
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, scaleSize / 2);
+            const brightness = 0.9 + Math.random() * 0.1;
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${0.3 * brightness})`);
+            gradient.addColorStop(0.7, `rgba(255, 255, 255, ${0.1 * brightness})`);
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, scaleSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Scale edge highlight
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 * brightness})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.arc(x, y, scaleSize / 2.2, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    }
+    
+    return new THREE.CanvasTexture(canvas);
+}
+
 // Create different fish species
 function createFishSpecies(species = 'default') {
     const fishGroup = new THREE.Group();
-    let bodyColor, accentColor, bodySize, headSize, tailSize, finSize;
+    let bodyColor, accentColor, bodySize, headSize, tailSize, finSize, iridescence, metalness;
     
     // Define species characteristics
     switch(species) {
@@ -260,6 +305,8 @@ function createFishSpecies(species = 'default') {
             headSize = 1.3;
             tailSize = { width: 2.5, height: 2.0 };
             finSize = 1.2;
+            iridescence = 0.6;
+            metalness = 0.4;
             break;
         case 'tropical':
             bodyColor = new THREE.Color().setHSL(Math.random(), 0.95, 0.55);
@@ -268,6 +315,8 @@ function createFishSpecies(species = 'default') {
             headSize = 1.0;
             tailSize = { width: 2.0, height: 1.8 };
             finSize = 1.0;
+            iridescence = 0.8;
+            metalness = 0.5;
             break;
         case 'angelfish':
             bodyColor = new THREE.Color(0x4169e1);
@@ -276,6 +325,8 @@ function createFishSpecies(species = 'default') {
             headSize = 0.8;
             tailSize = { width: 1.5, height: 3.0 };
             finSize = 2.0;
+            iridescence = 0.7;
+            metalness = 0.3;
             break;
         case 'koi':
             bodyColor = new THREE.Color(0xffffff);
@@ -284,6 +335,8 @@ function createFishSpecies(species = 'default') {
             headSize = 1.6;
             tailSize = { width: 3.0, height: 2.5 };
             finSize = 1.5;
+            iridescence = 0.5;
+            metalness = 0.3;
             break;
         case 'tetra':
             bodyColor = new THREE.Color(0xff3333);
@@ -292,6 +345,8 @@ function createFishSpecies(species = 'default') {
             headSize = 0.6;
             tailSize = { width: 1.2, height: 1.5 };
             finSize = 0.7;
+            iridescence = 0.9;
+            metalness = 0.6;
             break;
         case 'pleco':
             bodyColor = new THREE.Color(0x4a4a4a);
@@ -300,6 +355,8 @@ function createFishSpecies(species = 'default') {
             headSize = 1.1;
             tailSize = { width: 2.0, height: 1.8 };
             finSize = 1.3;
+            iridescence = 0.2;
+            metalness = 0.1;
             break;
         default:
             bodyColor = new THREE.Color().setHSL(Math.random(), 0.75, 0.55);
@@ -308,22 +365,27 @@ function createFishSpecies(species = 'default') {
             headSize = 1.3;
             tailSize = { width: 2.2, height: 2.0 };
             finSize = 1.2;
+            iridescence = 0.6;
+            metalness = 0.4;
     }
 
-    // Create realistic body using multiple spheres for smooth ellipsoid shape
-    const bodyMaterial = new THREE.MeshPhongMaterial({
+    // Create realistic body material with scales and iridescence
+    const scaleTexture = createScaleTexture(bodyColor);
+    const bodyMaterial = new THREE.MeshStandardMaterial({
         color: bodyColor,
-        shininess: 80,
-        specular: 0x444444,
-        reflectivity: 0.5
+        map: scaleTexture,
+        metalness: metalness,
+        roughness: 0.3,
+        emissive: bodyColor,
+        emissiveIntensity: iridescence * 0.15
     });
 
-    // Main body segments for smooth fish shape
-    const segments = 5;
+    // Main body segments for smooth fish shape with higher detail
+    const segments = 7;
     for (let i = 0; i < segments; i++) {
         const t = i / (segments - 1);
         const radius = bodySize.radiusFront * (1 - t) + bodySize.radiusBack * t;
-        const segmentGeometry = new THREE.SphereGeometry(radius, 16, 16);
+        const segmentGeometry = new THREE.SphereGeometry(radius, 24, 24);
         const segment = new THREE.Mesh(segmentGeometry, bodyMaterial);
         segment.position.z = (t - 0.5) * bodySize.length;
         segment.scale.set(1, 0.85, 1.2);
@@ -333,7 +395,7 @@ function createFishSpecies(species = 'default') {
     }
 
     // Head with more detail
-    const headGeometry = new THREE.SphereGeometry(headSize, 20, 20);
+    const headGeometry = new THREE.SphereGeometry(headSize, 32, 32);
     const head = new THREE.Mesh(headGeometry, bodyMaterial);
     head.position.z = bodySize.length / 2 + headSize * 0.4;
     head.scale.set(0.9, 0.85, 0.75);
@@ -341,11 +403,34 @@ function createFishSpecies(species = 'default') {
     head.receiveShadow = true;
     fishGroup.add(head);
 
-    // Eyes - more realistic with white and pupil
-    const eyeWhiteGeometry = new THREE.SphereGeometry(0.35, 16, 16);
-    const eyeWhiteMaterial = new THREE.MeshPhongMaterial({
+    // Add gill slits for realism
+    const gillMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(bodyColor.r * 0.6, bodyColor.g * 0.6, bodyColor.b * 0.6),
+        metalness: 0.2,
+        roughness: 0.7
+    });
+    
+    for (let side of [-1, 1]) {
+        for (let i = 0; i < 3; i++) {
+            const gillGeometry = new THREE.PlaneGeometry(0.15, headSize * 0.4);
+            const gill = new THREE.Mesh(gillGeometry, gillMaterial);
+            gill.position.set(
+                side * headSize * 0.6,
+                headSize * 0.1,
+                bodySize.length / 2 - i * 0.2
+            );
+            gill.rotation.y = side * Math.PI / 2;
+            gill.rotation.z = side * 0.2;
+            fishGroup.add(gill);
+        }
+    }
+
+    // Eyes - more realistic with white, iris, and pupil
+    const eyeWhiteGeometry = new THREE.SphereGeometry(0.4, 20, 20);
+    const eyeWhiteMaterial = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        shininess: 100
+        metalness: 0.1,
+        roughness: 0.2
     });
     const eyeLeft = new THREE.Mesh(eyeWhiteGeometry, eyeWhiteMaterial);
     eyeLeft.position.set(headSize * 0.5, headSize * 0.3, bodySize.length / 2 + headSize * 0.6);
@@ -357,31 +442,82 @@ function createFishSpecies(species = 'default') {
     eyeRight.castShadow = true;
     fishGroup.add(eyeRight);
 
-    // Pupils
-    const pupilGeometry = new THREE.SphereGeometry(0.15, 12, 12);
-    const pupilMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+    // Iris
+    const irisGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    const irisColor = new THREE.Color().setHSL(Math.random() * 0.15, 0.6, 0.4);
+    const irisMaterial = new THREE.MeshStandardMaterial({ 
+        color: irisColor,
+        metalness: 0.3,
+        roughness: 0.4
+    });
+    const irisLeft = new THREE.Mesh(irisGeometry, irisMaterial);
+    irisLeft.position.set(headSize * 0.55, headSize * 0.3, bodySize.length / 2 + headSize * 0.75);
+    fishGroup.add(irisLeft);
+
+    const irisRight = new THREE.Mesh(irisGeometry, irisMaterial);
+    irisRight.position.set(-headSize * 0.55, headSize * 0.3, bodySize.length / 2 + headSize * 0.75);
+    fishGroup.add(irisRight);
+
+    // Pupils - glossy black
+    const pupilGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+    const pupilMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x000000,
+        metalness: 0.8,
+        roughness: 0.1
+    });
     const pupilLeft = new THREE.Mesh(pupilGeometry, pupilMaterial);
-    pupilLeft.position.set(headSize * 0.55, headSize * 0.3, bodySize.length / 2 + headSize * 0.75);
+    pupilLeft.position.set(headSize * 0.58, headSize * 0.3, bodySize.length / 2 + headSize * 0.82);
     fishGroup.add(pupilLeft);
 
     const pupilRight = new THREE.Mesh(pupilGeometry, pupilMaterial);
-    pupilRight.position.set(-headSize * 0.55, headSize * 0.3, bodySize.length / 2 + headSize * 0.75);
+    pupilRight.position.set(-headSize * 0.58, headSize * 0.3, bodySize.length / 2 + headSize * 0.82);
     fishGroup.add(pupilRight);
 
-    // Mouth
-    const mouthGeometry = new THREE.SphereGeometry(0.2, 12, 12);
-    const mouthMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+    // Mouth with more detail
+    const mouthGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+    const mouthMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x2a2a2a,
+        metalness: 0.1,
+        roughness: 0.8
+    });
     const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
-    mouth.position.set(0, -headSize * 0.2, bodySize.length / 2 + headSize * 0.7);
-    mouth.scale.set(1.5, 0.8, 0.5);
+    mouth.position.set(0, -headSize * 0.25, bodySize.length / 2 + headSize * 0.75);
+    mouth.scale.set(1.3, 0.7, 0.6);
     fishGroup.add(mouth);
 
-    // Tail fin - more detailed
-    const tailGeometry = new THREE.ConeGeometry(tailSize.width / 2, tailSize.height, 8);
-    const tailMaterial = new THREE.MeshPhongMaterial({
+    // Lateral line (sensory organ line along body)
+    const lateralLineMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(bodyColor.r * 0.7, bodyColor.g * 0.7, bodyColor.b * 0.7),
+        metalness: 0.5,
+        roughness: 0.5
+    });
+    
+    for (let i = 0; i < 8; i++) {
+        const t = i / 7;
+        const lineGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+        const lineDot = new THREE.Mesh(lineGeometry, lateralLineMaterial);
+        lineDot.position.set(
+            bodySize.radiusFront * 0.9,
+            0,
+            (t - 0.5) * bodySize.length * 0.9
+        );
+        fishGroup.add(lineDot);
+        
+        // Mirror on other side
+        const lineDot2 = lineDot.clone();
+        lineDot2.position.x = -bodySize.radiusFront * 0.9;
+        fishGroup.add(lineDot2);
+    }
+
+    // Tail fin - more detailed and realistic
+    const tailGeometry = new THREE.ConeGeometry(tailSize.width / 2, tailSize.height, 16);
+    const tailMaterial = new THREE.MeshStandardMaterial({
         color: accentColor,
-        shininess: 60,
-        specular: 0x333333
+        metalness: metalness * 0.8,
+        roughness: 0.4,
+        transparent: true,
+        opacity: 0.95,
+        side: THREE.DoubleSide
     });
     const tail = new THREE.Mesh(tailGeometry, tailMaterial);
     tail.position.z = -bodySize.length / 2 - tailSize.height / 2;
@@ -389,56 +525,128 @@ function createFishSpecies(species = 'default') {
     tail.castShadow = true;
     tail.receiveShadow = true;
     fishGroup.add(tail);
+    
+    // Add tail fin rays for detail
+    for (let i = 0; i < 5; i++) {
+        const rayGeometry = new THREE.CylinderGeometry(0.02, 0.02, tailSize.height * 0.9, 8);
+        const rayMaterial = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(accentColor.r * 0.8, accentColor.g * 0.8, accentColor.b * 0.8),
+            metalness: 0.3,
+            roughness: 0.6
+        });
+        const ray = new THREE.Mesh(rayGeometry, rayMaterial);
+        const angle = (i - 2) * 0.3;
+        ray.position.z = -bodySize.length / 2 - tailSize.height / 2;
+        ray.rotation.x = Math.PI / 2;
+        ray.rotation.z = angle;
+        fishGroup.add(ray);
+    }
 
-    // Dorsal fin
-    const dorsalGeometry = new THREE.ConeGeometry(finSize * 0.6, finSize * 1.5, 8);
-    const dorsalMaterial = new THREE.MeshPhongMaterial({
+    // Dorsal fin with more detail
+    const dorsalGeometry = new THREE.ConeGeometry(finSize * 0.7, finSize * 1.8, 12);
+    const dorsalMaterial = new THREE.MeshStandardMaterial({
         color: accentColor,
-        shininess: 50
+        metalness: metalness * 0.7,
+        roughness: 0.4,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide
     });
     const dorsalFin = new THREE.Mesh(dorsalGeometry, dorsalMaterial);
-    dorsalFin.position.set(0, bodySize.radiusFront * 0.8, 0);
+    dorsalFin.position.set(0, bodySize.radiusFront * 0.9, 0);
     dorsalFin.rotation.z = Math.PI / 2;
     dorsalFin.castShadow = true;
     dorsalFin.receiveShadow = true;
     fishGroup.add(dorsalFin);
+    
+    // Dorsal fin rays
+    for (let i = 0; i < 4; i++) {
+        const rayGeometry = new THREE.CylinderGeometry(0.015, 0.015, finSize * 1.5, 8);
+        const ray = new THREE.Mesh(rayGeometry, new THREE.MeshStandardMaterial({
+            color: new THREE.Color(accentColor.r * 0.8, accentColor.g * 0.8, accentColor.b * 0.8),
+            metalness: 0.3,
+            roughness: 0.6
+        }));
+        ray.position.set((i - 1.5) * 0.2, bodySize.radiusFront * 0.9 + finSize * 0.7, 0);
+        ray.rotation.z = Math.PI / 2;
+        fishGroup.add(ray);
+    }
 
-    // Pectoral fins (left and right)
-    const pectoralGeometry = new THREE.ConeGeometry(finSize * 0.5, finSize, 6);
-    const pectoralMaterial = new THREE.MeshPhongMaterial({
+    // Pectoral fins (left and right) - more realistic
+    const pectoralGeometry = new THREE.ConeGeometry(finSize * 0.6, finSize * 1.2, 10);
+    const pectoralMaterial = new THREE.MeshStandardMaterial({
         color: accentColor,
-        shininess: 50,
+        metalness: metalness * 0.6,
+        roughness: 0.4,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.85,
+        side: THREE.DoubleSide
     });
 
     const pectoralLeft = new THREE.Mesh(pectoralGeometry, pectoralMaterial);
-    pectoralLeft.position.set(bodySize.radiusFront * 0.7, 0, 0);
-    pectoralLeft.rotation.z = Math.PI / 3;
+    pectoralLeft.position.set(bodySize.radiusFront * 0.8, -0.2, bodySize.length * 0.15);
+    pectoralLeft.rotation.z = Math.PI / 2.5;
+    pectoralLeft.rotation.y = -0.3;
     pectoralLeft.castShadow = true;
     fishGroup.add(pectoralLeft);
 
     const pectoralRight = new THREE.Mesh(pectoralGeometry, pectoralMaterial);
-    pectoralRight.position.set(-bodySize.radiusFront * 0.7, 0, 0);
-    pectoralRight.rotation.z = -Math.PI / 3;
+    pectoralRight.position.set(-bodySize.radiusFront * 0.8, -0.2, bodySize.length * 0.15);
+    pectoralRight.rotation.z = -Math.PI / 2.5;
+    pectoralRight.rotation.y = 0.3;
     pectoralRight.castShadow = true;
     fishGroup.add(pectoralRight);
+    
+    // Ventral (pelvic) fins
+    const ventralGeometry = new THREE.ConeGeometry(finSize * 0.4, finSize * 0.8, 8);
+    const ventralMaterial = new THREE.MeshStandardMaterial({
+        color: accentColor,
+        metalness: metalness * 0.5,
+        roughness: 0.5,
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide
+    });
+    
+    const ventralLeft = new THREE.Mesh(ventralGeometry, ventralMaterial);
+    ventralLeft.position.set(bodySize.radiusFront * 0.5, -bodySize.radiusFront * 0.7, 0);
+    ventralLeft.rotation.z = Math.PI / 3;
+    ventralLeft.rotation.x = 0.3;
+    fishGroup.add(ventralLeft);
+    
+    const ventralRight = new THREE.Mesh(ventralGeometry, ventralMaterial);
+    ventralRight.position.set(-bodySize.radiusFront * 0.5, -bodySize.radiusFront * 0.7, 0);
+    ventralRight.rotation.z = -Math.PI / 3;
+    ventralRight.rotation.x = 0.3;
+    fishGroup.add(ventralRight);
 
-    // Store animation data
+    // Store animation data with enhanced properties
     fishGroup.userData = {
         angle: Math.random() * Math.PI * 2,
-        speed: Math.random() * 0.02 + 0.01,
+        speed: Math.random() * 0.015 + 0.008,
+        baseSpeed: Math.random() * 0.015 + 0.008,
+        targetSpeed: Math.random() * 0.015 + 0.008,
+        acceleration: 0,
         tailWave: 0,
         finWave: 0,
         bodyWave: 0,
+        breathingPhase: Math.random() * Math.PI * 2,
+        depthPreference: Math.random() * 20 - 10, // preferred Y position
         bodySize: bodySize,
         headSize: headSize,
         tailSize: tailSize,
         finSize: finSize,
-        tailIndex: fishGroup.children.length - 3,
-        dorsalFinIndex: fishGroup.children.length - 2,
-        pectoralLeftIndex: fishGroup.children.length - 1,
-        pectoralRightIndex: fishGroup.children.length
+        species: species,
+        iridescence: iridescence,
+        // Store indices for animation
+        bodySegmentCount: 7,
+        gillStartIndex: 7 + 1, // after body segments and head
+        eyeLeftIndex: 7 + 1 + 6, // after gills
+        eyeRightIndex: 7 + 1 + 6 + 1,
+        irisLeftIndex: 7 + 1 + 6 + 2,
+        irisRightIndex: 7 + 1 + 6 + 3,
+        pupilLeftIndex: 7 + 1 + 6 + 4,
+        pupilRightIndex: 7 + 1 + 6 + 5
     };
 
     return fishGroup;
@@ -644,8 +852,15 @@ function addPlant() {
 
 // Update fish positions and animations
 function updateFish() {
+    const time = Date.now() * 0.001;
+    
     fish.forEach((f, index) => {
         const data = f.userData;
+
+        // Realistic acceleration and deceleration
+        const speedVariation = Math.sin(time * 0.5 + index) * 0.005;
+        data.targetSpeed = data.baseSpeed + speedVariation;
+        data.speed += (data.targetSpeed - data.speed) * 0.05;
 
         // Schooling behavior - fish tend to move together
         if (schoolingEnabled && index > 0) {
@@ -657,54 +872,62 @@ function updateFish() {
             if (nearbyFish.length > 0) {
                 // Average direction of nearby fish
                 let avgAngle = 0;
+                let avgY = 0;
                 nearbyFish.forEach(other => {
                     avgAngle += other.userData.angle;
+                    avgY += other.position.y;
                 });
                 avgAngle /= nearbyFish.length;
+                avgY /= nearbyFish.length;
                 
                 // Gradually align with school
-                data.angle += (avgAngle - data.angle) * 0.02;
+                data.angle += (avgAngle - data.angle) * 0.03;
+                
+                // Maintain similar depth
+                const depthDiff = avgY - f.position.y;
+                f.position.y += depthDiff * 0.01;
             }
         }
 
-        // Swimming motion with slight randomness
-        data.angle += (Math.random() - 0.5) * 0.02;
-        f.position.x += Math.cos(data.angle) * data.speed * 2;
-        f.position.z += Math.sin(data.angle) * data.speed * 2;
+        // Swimming motion with realistic turning
+        const turnRate = 0.015;
+        data.angle += (Math.random() - 0.5) * turnRate;
+        
+        // Move towards depth preference
+        const depthDiff = data.depthPreference - f.position.y;
+        f.position.y += depthDiff * 0.005;
+        
+        // Occasionally change depth preference
+        if (Math.random() < 0.001) {
+            data.depthPreference = Math.random() * 20 - 10;
+        }
+        
+        // Forward movement with realistic speed
+        const moveSpeed = data.speed * 2.5;
+        f.position.x += Math.cos(data.angle) * moveSpeed;
+        f.position.z += Math.sin(data.angle) * moveSpeed;
 
-        // Vertical movement - gentle bobbing
-        f.position.y += Math.sin(Date.now() * 0.0005 + index) * 0.02;
+        // Gentle bobbing motion
+        f.position.y += Math.sin(time * 0.8 + index) * 0.015;
 
         // Keep fish in bounds with smooth turning, accounting for fish size
-        // Calculate the full extent of all fish parts
         const fishLength = data.bodySize.length;
         const fishRadiusFront = data.bodySize.radiusFront;
-        const fishRadiusBack = data.bodySize.radiusBack;
         const headSize = data.headSize;
         const tailSize = data.tailSize;
-        const finSize = data.finSize || 1.0; // fallback for older fish without finSize
+        const finSize = data.finSize || 1.0;
         
-        // Z-axis extent: head extends forward, tail extends backward
-        // Head: positioned at bodySize.length/2 + headSize*0.4, with radius headSize (scaled 0.75 in z)
-        // Eyes extend to bodySize.length/2 + headSize*0.6 + 0.35 (eye radius)
-        // Tail: positioned at -bodySize.length/2 - tailSize.height/2
-        const headExtentZ = fishLength / 2 + headSize * 0.6 + 0.35; // eyes are the furthest forward
-        const tailExtentZ = fishLength / 2 + tailSize.height / 2; // tail extends backward
-        const fishExtentZ = Math.max(headExtentZ, tailExtentZ) + 0.5; // add margin
+        const headExtentZ = fishLength / 2 + headSize * 0.6 + 0.4;
+        const tailExtentZ = fishLength / 2 + tailSize.height / 2;
+        const fishExtentZ = Math.max(headExtentZ, tailExtentZ) + 0.5;
         
-        // X-axis extent: pectoral fins extend outward
-        // Pectoral fins positioned at ±bodySize.radiusFront * 0.7, with length finSize
-        const pectoralExtentX = fishRadiusFront * 0.7 + finSize * 0.5;
-        const fishExtentX = Math.max(fishRadiusFront, pectoralExtentX) + 0.5; // add margin
+        const pectoralExtentX = fishRadiusFront * 0.8 + finSize * 0.6;
+        const fishExtentX = Math.max(fishRadiusFront, pectoralExtentX) + 0.5;
         
-        // Y-axis extent: dorsal fin extends upward, body extends downward
-        // Dorsal fin: positioned at bodySize.radiusFront * 0.8, with length finSize * 1.5
-        const dorsalExtentY = fishRadiusFront * 0.8 + finSize * 1.5;
+        const dorsalExtentY = fishRadiusFront * 0.9 + finSize * 1.8;
         const bodyExtentY = Math.max(fishRadiusFront, headSize * 0.85);
-        const fishExtentY = Math.max(dorsalExtentY, bodyExtentY) + 0.5; // add margin
+        const fishExtentY = Math.max(dorsalExtentY, bodyExtentY) + 0.5;
         
-        // Aquarium water bounds (with some margin from glass)
-        // Aquarium dimensions: width=40 (x: -20 to 20), depth=30 (z: -15 to 15), height=30 (y: -15 to 15)
         const maxX = 20 - fishExtentX;
         const minX = -20 + fishExtentX;
         const maxZ = 15 - fishExtentZ;
@@ -714,47 +937,74 @@ function updateFish() {
         
         // Boundary checking with smooth turning
         if (f.position.x > maxX || f.position.x < minX) {
-            data.angle += Math.PI * 0.1;
+            data.angle += Math.PI * 0.15;
             f.position.x = Math.max(minX, Math.min(maxX, f.position.x));
         }
         if (f.position.z > maxZ || f.position.z < minZ) {
-            data.angle += Math.PI * 0.1;
+            data.angle += Math.PI * 0.15;
             f.position.z = Math.max(minZ, Math.min(maxZ, f.position.z));
         }
-        if (f.position.y > maxY) f.position.y = maxY;
-        if (f.position.y < minY) f.position.y = minY;
-
-        // Enhanced tail animation - more fluid
-        data.tailWave += 0.15;
-        const tailChild = f.children[data.tailIndex];
-        if (tailChild) {
-            tailChild.rotation.y = Math.sin(data.tailWave) * 0.4;
-            tailChild.rotation.z = Math.sin(data.tailWave) * 0.2;
+        if (f.position.y > maxY) {
+            f.position.y = maxY;
+            data.depthPreference = maxY - 2;
+        }
+        if (f.position.y < minY) {
+            f.position.y = minY;
+            data.depthPreference = minY + 2;
         }
 
-        // Dorsal fin animation
-        const dorsalFin = f.children[data.dorsalFinIndex];
-        if (dorsalFin) {
-            dorsalFin.rotation.z = Math.sin(data.tailWave * 0.8) * 0.1;
-        }
+        // Enhanced tail animation - more fluid and speed-dependent
+        data.tailWave += 0.12 + data.speed * 5;
+        const tailWaveAmplitude = 0.3 + data.speed * 10;
+        
+        // Find tail and animate
+        f.children.forEach((child, i) => {
+            if (child.geometry && child.geometry.type === 'ConeGeometry') {
+                // Check if it's the main tail (larger cone)
+                if (child.position.z < 0 && child.scale.x === 1) {
+                    child.rotation.y = Math.sin(data.tailWave) * tailWaveAmplitude;
+                    child.rotation.z = Math.sin(data.tailWave * 0.7) * tailWaveAmplitude * 0.5;
+                }
+                // Dorsal fin
+                else if (child.position.y > 0 && child.position.z === 0) {
+                    child.rotation.z = Math.PI / 2 + Math.sin(data.tailWave * 0.6) * 0.08;
+                }
+                // Pectoral fins - alternating rowing motion
+                else if (child.position.z > 0) {
+                    const side = child.position.x > 0 ? 1 : -1;
+                    const baseRotation = side > 0 ? Math.PI / 2.5 : -Math.PI / 2.5;
+                    child.rotation.z = baseRotation + Math.sin(data.tailWave + side * Math.PI) * 0.4;
+                    child.rotation.x = Math.sin(data.tailWave + side * Math.PI) * 0.2;
+                }
+                // Ventral fins
+                else if (child.position.y < 0) {
+                    const side = child.position.x > 0 ? 1 : -1;
+                    const baseRotation = side > 0 ? Math.PI / 3 : -Math.PI / 3;
+                    child.rotation.z = baseRotation + Math.sin(data.tailWave * 0.5) * 0.15;
+                }
+            }
+        });
 
-        // Pectoral fins animation - alternating movement
-        data.finWave += 0.12;
-        const pectoralLeft = f.children[data.pectoralLeftIndex];
-        const pectoralRight = f.children[data.pectoralRightIndex];
-        if (pectoralLeft && pectoralRight) {
-            pectoralLeft.rotation.y = Math.sin(data.finWave) * 0.3;
-            pectoralRight.rotation.y = Math.sin(data.finWave + Math.PI) * 0.3;
-        }
-
-        // Body undulation - make body segments wave
-        data.bodyWave += 0.1;
-        for (let i = 0; i < 5; i++) {
+        // Body undulation - realistic wave motion
+        data.bodyWave += 0.08 + data.speed * 3;
+        for (let i = 0; i < data.bodySegmentCount; i++) {
             const segment = f.children[i];
-            if (segment) {
-                const phase = data.bodyWave + i * 0.3;
-                segment.rotation.y = Math.sin(phase) * 0.05;
-                segment.position.y = Math.sin(phase) * 0.1;
+            if (segment && segment.geometry && segment.geometry.type === 'SphereGeometry') {
+                const phase = data.bodyWave + i * 0.4;
+                const amplitude = 0.04 * (i / data.bodySegmentCount);
+                segment.rotation.y = Math.sin(phase) * amplitude;
+                segment.position.y = Math.sin(phase) * amplitude * 0.5;
+            }
+        }
+        
+        // Breathing animation - gill movement
+        data.breathingPhase += 0.08;
+        const breathingAmount = Math.sin(data.breathingPhase) * 0.15 + 0.15;
+        
+        for (let i = data.gillStartIndex; i < data.gillStartIndex + 6; i++) {
+            const gill = f.children[i];
+            if (gill && gill.geometry && gill.geometry.type === 'PlaneGeometry') {
+                gill.scale.x = 1 + breathingAmount;
             }
         }
 
@@ -767,10 +1017,15 @@ function updateFish() {
         while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
         while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
         
-        f.rotation.y += rotationDiff * 0.1;
+        f.rotation.y += rotationDiff * 0.12;
 
-        // Slight pitch based on vertical movement
-        f.rotation.x = Math.sin(Date.now() * 0.001 + index) * 0.1;
+        // Realistic pitch based on vertical movement and speed
+        const verticalVelocity = (f.position.y - (f.userData.lastY || f.position.y));
+        f.rotation.x = verticalVelocity * 0.5 + Math.sin(time * 0.5 + index) * 0.05;
+        f.userData.lastY = f.position.y;
+        
+        // Slight roll during turns
+        f.rotation.z = Math.sin(rotationDiff) * 0.2;
     });
 }
 
