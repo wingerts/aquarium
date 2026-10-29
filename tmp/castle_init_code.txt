@@ -1,0 +1,5 @@
+    
+    // Add castle to the bottom of the aquarium
+    const castle = createCastle();
+    castle.position.set(0, -13, 0);
+    scene.add(castle);
