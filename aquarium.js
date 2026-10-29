@@ -1,6 +1,6 @@
 // Three.js Aquarium Scene
 let scene, camera, renderer, controls;
-let aquarium, fish = [], plants = [], bubbles = [], decorations = [], turtles = [];
+let aquarium, fish = [], plants = [], bubbles = [], decorations = [], turtles = [], eels = [];
 let autoRotate = true;
 let showBubbles = true;
 let schoolingEnabled = true;
@@ -856,6 +856,151 @@ function createTurtle() {
     return turtleGroup;
 }
 
+// Create an eel
+function createEel() {
+    const eelGroup = new THREE.Group();
+    
+    // Eel body - long and sinuous with multiple segments
+    const bodyColor = new THREE.Color().setHSL(Math.random() * 0.15 + 0.05, 0.7, 0.35); // Yellow-green to brown
+    const accentColor = new THREE.Color().setHSL(Math.random() * 0.1, 0.8, 0.5);
+    
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: bodyColor,
+        metalness: 0.3,
+        roughness: 0.6,
+        emissive: bodyColor,
+        emissiveIntensity: 0.1
+    });
+    
+    // Create eel body with 12 segments for smooth, sinuous movement
+    const segmentCount = 12;
+    const bodyLength = 8;
+    const bodyRadiusFront = 0.5;
+    const bodyRadiusBack = 0.3;
+    
+    for (let i = 0; i < segmentCount; i++) {
+        const t = i / (segmentCount - 1);
+        const radius = bodyRadiusFront * (1 - t) + bodyRadiusBack * t;
+        const segmentGeometry = new THREE.SphereGeometry(radius, 16, 16);
+        const segment = new THREE.Mesh(segmentGeometry, bodyMaterial);
+        segment.position.z = (t - 0.5) * bodyLength;
+        segment.scale.set(1, 0.7, 1.3); // Elongated
+        segment.castShadow = true;
+        segment.receiveShadow = true;
+        eelGroup.add(segment);
+    }
+    
+    // Head
+    const headGeometry = new THREE.SphereGeometry(0.5, 24, 24);
+    const head = new THREE.Mesh(headGeometry, bodyMaterial);
+    head.position.z = bodyLength / 2 + 0.4;
+    head.scale.set(0.85, 0.75, 0.7);
+    head.castShadow = true;
+    head.receiveShadow = true;
+    eelGroup.add(head);
+    
+    // Eyes - small and beady
+    const eyeGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x000000,
+        metalness: 0.6,
+        roughness: 0.2
+    });
+    
+    const eyeLeft = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    eyeLeft.position.set(0.2, 0.15, bodyLength / 2 + 0.6);
+    eyeLeft.castShadow = true;
+    eelGroup.add(eyeLeft);
+    
+    const eyeRight = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    eyeRight.position.set(-0.2, 0.15, bodyLength / 2 + 0.6);
+    eyeRight.castShadow = true;
+    eelGroup.add(eyeRight);
+    
+    // Eye highlights
+    const eyeHighlightGeometry = new THREE.SphereGeometry(0.05, 12, 12);
+    const eyeHighlightMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        metalness: 0.9,
+        roughness: 0.1
+    });
+    
+    const highlightLeft = new THREE.Mesh(eyeHighlightGeometry, eyeHighlightMaterial);
+    highlightLeft.position.set(0.25, 0.2, bodyLength / 2 + 0.7);
+    eelGroup.add(highlightLeft);
+    
+    const highlightRight = new THREE.Mesh(eyeHighlightGeometry, eyeHighlightMaterial);
+    highlightRight.position.set(-0.15, 0.2, bodyLength / 2 + 0.7);
+    eelGroup.add(highlightRight);
+    
+    // Mouth
+    const mouthGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+    const mouthMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a,
+        metalness: 0.1,
+        roughness: 0.8
+    });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, -0.1, bodyLength / 2 + 0.65);
+    mouth.scale.set(1.2, 0.6, 0.5);
+    eelGroup.add(mouth);
+    
+    // Dorsal fin - runs along the back
+    const dorsalSegments = 8;
+    for (let i = 0; i < dorsalSegments; i++) {
+        const t = i / (dorsalSegments - 1);
+        const finGeometry = new THREE.ConeGeometry(0.3, 0.8, 8);
+        const finMaterial = new THREE.MeshStandardMaterial({
+            color: accentColor,
+            metalness: 0.2,
+            roughness: 0.5,
+            transparent: true,
+            opacity: 0.85,
+            side: THREE.DoubleSide
+        });
+        const fin = new THREE.Mesh(finGeometry, finMaterial);
+        fin.position.set(0, bodyRadiusFront * 0.8, (t - 0.5) * bodyLength * 0.9);
+        fin.rotation.z = Math.PI / 2;
+        fin.castShadow = true;
+        eelGroup.add(fin);
+    }
+    
+    // Tail fin - pointed
+    const tailGeometry = new THREE.ConeGeometry(0.25, 1.2, 12);
+    const tailMaterial = new THREE.MeshStandardMaterial({
+        color: accentColor,
+        metalness: 0.2,
+        roughness: 0.5,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide
+    });
+    const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+    tail.position.z = -bodyLength / 2 - 0.6;
+    tail.rotation.x = Math.PI / 2;
+    tail.castShadow = true;
+    tail.receiveShadow = true;
+    eelGroup.add(tail);
+    
+    // Store animation data
+    eelGroup.userData = {
+        angle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.012 + 0.006,
+        baseSpeed: Math.random() * 0.012 + 0.006,
+        targetSpeed: Math.random() * 0.012 + 0.006,
+        acceleration: 0,
+        depthPreference: Math.random() * 15 - 8,
+        bodyWave: 0,
+        tailWave: 0,
+        segmentCount: segmentCount,
+        headIndex: segmentCount,
+        eyeLeftIndex: segmentCount + 1,
+        eyeRightIndex: segmentCount + 2
+    };
+    
+    return eelGroup;
+}
+
 
 // Create a plant
 function createPlant() {
@@ -1342,6 +1487,23 @@ function addTurtle() {
     updateStats();
 }
 
+// Add eel to the scene
+function addEel() {
+    // Limit to 8 eels for performance
+    if (eels.length >= 8) {
+        alert('Maximum 8 eels allowed for performance');
+        return;
+    }
+    const eel = createEel();
+    const x = Math.random() * 30 - 15;
+    const y = Math.random() * 12 - 6; // Eels prefer mid-depth
+    const z = Math.random() * 20 - 10;
+    eel.position.set(x, y, z);
+    scene.add(eel);
+    eels.push(eel);
+    updateStats();
+}
+
 // Update fish positions and animations
 function updateFish() {
     const time = Date.now() * 0.001;
@@ -1630,6 +1792,114 @@ function updateTurtles() {
     });
 }
 
+// Update eel positions and animations
+function updateEels() {
+    const time = Date.now() * 0.001;
+    
+    eels.forEach((e, index) => {
+        const data = e.userData;
+        
+        // Sinuous swimming motion - eels move with a wave-like pattern
+        const speedVariation = Math.sin(time * 0.4 + index) * 0.003;
+        data.targetSpeed = data.baseSpeed + speedVariation;
+        data.speed += (data.targetSpeed - data.speed) * 0.04;
+        
+        // Swimming motion with smooth turning
+        const turnRate = 0.012;
+        data.angle += (Math.random() - 0.5) * turnRate;
+        
+        // Move towards depth preference
+        const depthDiff = data.depthPreference - e.position.y;
+        e.position.y += depthDiff * 0.004;
+        
+        // Occasionally change depth preference
+        if (Math.random() < 0.0008) {
+            data.depthPreference = Math.random() * 15 - 6;
+        }
+        
+        // Forward movement
+        const moveSpeed = data.speed * 1.8;
+        e.position.x += Math.cos(data.angle) * moveSpeed;
+        e.position.z += Math.sin(data.angle) * moveSpeed;
+        
+        // Gentle bobbing motion
+        e.position.y += Math.sin(time * 0.6 + index) * 0.01;
+        
+        // Keep eel in bounds
+        const eelExtentX = 1.5;
+        const eelExtentZ = 2.0;
+        const eelExtentY = 1.0;
+        
+        const maxX = 20 - eelExtentX;
+        const minX = -20 + eelExtentX;
+        const maxZ = 15 - eelExtentZ;
+        const minZ = -15 + eelExtentZ;
+        const maxY = 15 - eelExtentY;
+        const minY = -13 + eelExtentY;
+        
+        // Boundary checking
+        if (e.position.x > maxX || e.position.x < minX) {
+            data.angle += Math.PI * 0.2;
+            e.position.x = Math.max(minX, Math.min(maxX, e.position.x));
+        }
+        if (e.position.z > maxZ || e.position.z < minZ) {
+            data.angle += Math.PI * 0.2;
+            e.position.z = Math.max(minZ, Math.min(maxZ, e.position.z));
+        }
+        if (e.position.y > maxY) {
+            e.position.y = maxY;
+            data.depthPreference = maxY - 2;
+        }
+        if (e.position.y < minY) {
+            e.position.y = minY;
+            data.depthPreference = minY + 1;
+        }
+        
+        // Body wave animation - creates sinuous swimming motion
+        data.bodyWave += 0.08 + data.speed * 2.5;
+        data.tailWave += 0.12 + data.speed * 3;
+        
+        e.children.forEach((child, i) => {
+            // Animate body segments with wave motion
+            if (i < data.segmentCount) {
+                const segmentIndex = i;
+                const t = segmentIndex / (data.segmentCount - 1);
+                const waveOffset = data.bodyWave - t * Math.PI * 2;
+                
+                // Lateral wave motion
+                child.position.x = Math.sin(waveOffset) * 0.3 * (1 - t);
+                child.position.y = Math.cos(waveOffset * 0.5) * 0.15 * (1 - t);
+                
+                // Rotation for body segments
+                child.rotation.z = Math.sin(waveOffset) * 0.15 * (1 - t);
+                child.rotation.x = Math.sin(waveOffset * 0.7) * 0.1 * (1 - t);
+            }
+            
+            // Tail fin animation
+            if (i === data.segmentCount + 3) { // Tail is after head and eyes
+                child.rotation.y = Math.sin(data.tailWave) * 0.3;
+                child.rotation.z = Math.cos(data.tailWave) * 0.15;
+            }
+        });
+        
+        // Face direction with smooth rotation
+        const targetRotation = data.angle;
+        const currentRotation = e.rotation.y;
+        let rotationDiff = targetRotation - currentRotation;
+        
+        // Normalize rotation difference to [-PI, PI]
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        e.rotation.y += rotationDiff * 0.1;
+        
+        // Pitch based on vertical movement
+        const verticalVelocity = (e.position.y - (e.userData.lastY || e.position.y));
+        e.rotation.x = verticalVelocity * 0.4 + Math.sin(time * 0.4 + index) * 0.04;
+        e.userData.lastY = e.position.y;
+    });
+}
+
 // Update plant animations
 function updatePlants() {
     plants.forEach(p => {
@@ -1705,6 +1975,7 @@ function animate() {
     // Update animations
     updateFish();
     updateTurtles();
+    updateEels();
     updatePlants();
     updateBubbles();
     
@@ -1791,6 +2062,7 @@ function onWindowResize() {
 function updateStats() {
     document.getElementById('fishCount').textContent = fish.length;
     document.getElementById('turtleCount').textContent = turtles.length;
+    document.getElementById('eelCount').textContent = eels.length;
     document.getElementById('plantCount').textContent = plants.length;
     const shipCount = decorations.filter(d => d.userData && d.userData.isShip).length;
     const rockCount = decorations.length - shipCount;
