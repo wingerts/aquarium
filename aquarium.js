@@ -370,6 +370,16 @@ function createFishSpecies(species = 'default') {
             iridescence = 0.2;
             metalness = 0.1;
             break;
+        case 'eel':
+            bodyColor = new THREE.Color(0x2d5016);
+            accentColor = new THREE.Color(0x1a3d0a);
+            bodySize = { radiusFront: 0.5, radiusBack: 0.3, length: 7.0 };
+            headSize = 0.6;
+            tailSize = { width: 1.2, height: 1.5 };
+            finSize = 0.5;
+            iridescence = 0.3;
+            metalness = 0.2;
+            break;
         default:
             bodyColor = new THREE.Color().setHSL(Math.random(), 0.75, 0.55);
             accentColor = new THREE.Color().setHSL(Math.random(), 0.6, 0.7);
@@ -666,7 +676,7 @@ function createFishSpecies(species = 'default') {
 
 // Create a fish
 function createFish() {
-    const species = ['goldfish', 'tropical', 'angelfish', 'koi', 'tetra', 'pleco'];
+    const species = ['goldfish', 'tropical', 'angelfish', 'koi', 'tetra', 'pleco', 'eel'];
     const randomSpecies = species[Math.floor(Math.random() * species.length)];
     return createFishSpecies(randomSpecies);
 }
