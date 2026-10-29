@@ -1,6 +1,6 @@
 // Three.js Aquarium Scene
 let scene, camera, renderer, controls;
-let aquarium, fish = [], plants = [], bubbles = [], decorations = [];
+let aquarium, fish = [], plants = [], bubbles = [], decorations = [], turtles = [];
 let autoRotate = true;
 let showBubbles = true;
 let schoolingEnabled = true;
@@ -659,6 +659,192 @@ function createFish() {
     return createFishSpecies(randomSpecies);
 }
 
+// Create a turtle
+function createTurtle() {
+    const turtleGroup = new THREE.Group();
+    
+    // Shell - main body
+    const shellGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+    shellGeometry.scale(1.2, 0.8, 1.4); // Elongated ellipsoid shape
+    const shellMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x6b4423),
+        metalness: 0.1,
+        roughness: 0.7,
+        emissive: new THREE.Color(0x3d2817),
+        emissiveIntensity: 0.1
+    });
+    const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+    shell.castShadow = true;
+    shell.receiveShadow = true;
+    turtleGroup.add(shell);
+    
+    // Shell pattern - hexagonal scutes
+    const scuteMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x8b5a2b),
+        metalness: 0.05,
+        roughness: 0.8
+    });
+    
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 4; col++) {
+            const scuteGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+            const scute = new THREE.Mesh(scuteGeometry, scuteMaterial);
+            scute.position.set(
+                (col - 1.5) * 0.7,
+                0.3 - row * 0.5,
+                (row - 1) * 0.4
+            );
+            scute.scale.set(0.9, 0.7, 0.9);
+            scute.castShadow = true;
+            turtleGroup.add(scute);
+        }
+    }
+    
+    // Head
+    const headGeometry = new THREE.SphereGeometry(0.6, 24, 24);
+    const headMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x7a9b3d),
+        metalness: 0.1,
+        roughness: 0.6
+    });
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.set(0, 0.3, 1.8);
+    head.scale.set(0.8, 0.9, 1.0);
+    head.castShadow = true;
+    head.receiveShadow = true;
+    turtleGroup.add(head);
+    
+    // Eyes
+    const eyeGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x000000,
+        metalness: 0.5,
+        roughness: 0.3
+    });
+    
+    const eyeLeft = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    eyeLeft.position.set(0.25, 0.5, 2.2);
+    eyeLeft.castShadow = true;
+    turtleGroup.add(eyeLeft);
+    
+    const eyeRight = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    eyeRight.position.set(-0.25, 0.5, 2.2);
+    eyeRight.castShadow = true;
+    turtleGroup.add(eyeRight);
+    
+    // Eye highlights
+    const eyeHighlightGeometry = new THREE.SphereGeometry(0.06, 12, 12);
+    const eyeHighlightMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        metalness: 0.8,
+        roughness: 0.1
+    });
+    
+    const highlightLeft = new THREE.Mesh(eyeHighlightGeometry, eyeHighlightMaterial);
+    highlightLeft.position.set(0.3, 0.55, 2.3);
+    turtleGroup.add(highlightLeft);
+    
+    const highlightRight = new THREE.Mesh(eyeHighlightGeometry, eyeHighlightMaterial);
+    highlightRight.position.set(-0.2, 0.55, 2.3);
+    turtleGroup.add(highlightRight);
+    
+    // Mouth
+    const mouthGeometry = new THREE.SphereGeometry(0.2, 12, 12);
+    const mouthMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x5a7a2d),
+        metalness: 0.05,
+        roughness: 0.8
+    });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, 0.1, 2.3);
+    mouth.scale.set(1.2, 0.6, 0.8);
+    turtleGroup.add(mouth);
+    
+    // Front left flipper
+    const flipperGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+    const flipperMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x6b8e23),
+        metalness: 0.1,
+        roughness: 0.7
+    });
+    
+    const flipperFL = new THREE.Mesh(flipperGeometry, flipperMaterial);
+    flipperFL.position.set(1.3, -0.3, 0.8);
+    flipperFL.scale.set(0.6, 0.8, 0.5);
+    flipperFL.rotation.z = Math.PI / 4;
+    flipperFL.castShadow = true;
+    flipperFL.receiveShadow = true;
+    turtleGroup.add(flipperFL);
+    
+    // Front right flipper
+    const flipperFR = new THREE.Mesh(flipperGeometry, flipperMaterial);
+    flipperFR.position.set(-1.3, -0.3, 0.8);
+    flipperFR.scale.set(0.6, 0.8, 0.5);
+    flipperFR.rotation.z = -Math.PI / 4;
+    flipperFR.castShadow = true;
+    flipperFR.receiveShadow = true;
+    turtleGroup.add(flipperFR);
+    
+    // Back left flipper
+    const flipperBL = new THREE.Mesh(flipperGeometry, flipperMaterial);
+    flipperBL.position.set(1.2, -0.3, -0.8);
+    flipperBL.scale.set(0.5, 0.7, 0.5);
+    flipperBL.rotation.z = Math.PI / 4;
+    flipperBL.castShadow = true;
+    flipperBL.receiveShadow = true;
+    turtleGroup.add(flipperBL);
+    
+    // Back right flipper
+    const flipperBR = new THREE.Mesh(flipperGeometry, flipperMaterial);
+    flipperBR.position.set(-1.2, -0.3, -0.8);
+    flipperBR.scale.set(0.5, 0.7, 0.5);
+    flipperBR.rotation.z = -Math.PI / 4;
+    flipperBR.castShadow = true;
+    flipperBR.receiveShadow = true;
+    turtleGroup.add(flipperBR);
+    
+    // Tail
+    const tailGeometry = new THREE.ConeGeometry(0.25, 1.2, 12);
+    const tailMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x6b8e23),
+        metalness: 0.1,
+        roughness: 0.7
+    });
+    const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+    tail.position.set(0, -0.2, -1.8);
+    tail.rotation.x = Math.PI / 2;
+    tail.castShadow = true;
+    tail.receiveShadow = true;
+    turtleGroup.add(tail);
+    
+    // Store animation data
+    turtleGroup.userData = {
+        angle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.005 + 0.002, // Slower than fish
+        baseSpeed: Math.random() * 0.005 + 0.002,
+        targetSpeed: Math.random() * 0.005 + 0.002,
+        acceleration: 0,
+        depthPreference: Math.random() * 10 - 5, // Turtles prefer lower depths
+        flipperWave: 0,
+        headBob: 0,
+        tailWave: 0,
+        // Indices for animation
+        shellIndex: 0,
+        scuteStartIndex: 1,
+        headIndex: 13,
+        eyeLeftIndex: 14,
+        eyeRightIndex: 15,
+        flipperFLIndex: 18,
+        flipperFRIndex: 19,
+        flipperBLIndex: 20,
+        flipperBRIndex: 21,
+        tailIndex: 22
+    };
+    
+    return turtleGroup;
+}
+
+
 // Create a plant
 function createPlant() {
     const plantGroup = new THREE.Group();
@@ -850,6 +1036,23 @@ function addPlant() {
     updateStats();
 }
 
+// Add turtle to the scene
+function addTurtle() {
+    // Limit to 5 turtles for performance
+    if (turtles.length >= 5) {
+        alert('Maximum 5 turtles allowed for performance');
+        return;
+    }
+    const turtle = createTurtle();
+    const x = Math.random() * 30 - 15;
+    const y = Math.random() * 8 - 8; // Turtles prefer lower depths
+    const z = Math.random() * 20 - 10;
+    turtle.position.set(x, y, z);
+    scene.add(turtle);
+    turtles.push(turtle);
+    updateStats();
+}
+
 // Update fish positions and animations
 function updateFish() {
     const time = Date.now() * 0.001;
@@ -1029,6 +1232,115 @@ function updateFish() {
     });
 }
 
+// Update turtle animations and movement
+function updateTurtles() {
+    const time = Date.now() * 0.001;
+    
+    turtles.forEach((t, index) => {
+        const data = t.userData;
+        
+        // Slower, more deliberate movement than fish
+        const speedVariation = Math.sin(time * 0.3 + index) * 0.002;
+        data.targetSpeed = data.baseSpeed + speedVariation;
+        data.speed += (data.targetSpeed - data.speed) * 0.03;
+        
+        // Swimming motion with slower turning
+        const turnRate = 0.008;
+        data.angle += (Math.random() - 0.5) * turnRate;
+        
+        // Move towards depth preference
+        const depthDiff = data.depthPreference - t.position.y;
+        t.position.y += depthDiff * 0.003;
+        
+        // Occasionally change depth preference
+        if (Math.random() < 0.0005) {
+            data.depthPreference = Math.random() * 10 - 8;
+        }
+        
+        // Forward movement - slower than fish
+        const moveSpeed = data.speed * 1.5;
+        t.position.x += Math.cos(data.angle) * moveSpeed;
+        t.position.z += Math.sin(data.angle) * moveSpeed;
+        
+        // Gentle bobbing motion
+        t.position.y += Math.sin(time * 0.5 + index) * 0.008;
+        
+        // Keep turtle in bounds
+        const turtleExtentX = 1.5;
+        const turtleExtentZ = 1.8;
+        const turtleExtentY = 1.0;
+        
+        const maxX = 20 - turtleExtentX;
+        const minX = -20 + turtleExtentX;
+        const maxZ = 15 - turtleExtentZ;
+        const minZ = -15 + turtleExtentZ;
+        const maxY = 15 - turtleExtentY;
+        const minY = -13 + turtleExtentY;
+        
+        // Boundary checking
+        if (t.position.x > maxX || t.position.x < minX) {
+            data.angle += Math.PI * 0.15;
+            t.position.x = Math.max(minX, Math.min(maxX, t.position.x));
+        }
+        if (t.position.z > maxZ || t.position.z < minZ) {
+            data.angle += Math.PI * 0.15;
+            t.position.z = Math.max(minZ, Math.min(maxZ, t.position.z));
+        }
+        if (t.position.y > maxY) {
+            t.position.y = maxY;
+            data.depthPreference = maxY - 2;
+        }
+        if (t.position.y < minY) {
+            t.position.y = minY;
+            data.depthPreference = minY + 1;
+        }
+        
+        // Flipper animation - paddling motion
+        data.flipperWave += 0.06 + data.speed * 2;
+        
+        t.children.forEach((child, i) => {
+            // Animate flippers
+            if (i >= data.flipperFLIndex && i <= data.flipperBRIndex) {
+                const flipperIndex = i - data.flipperFLIndex;
+                const side = flipperIndex % 2 === 0 ? 1 : -1;
+                const isBack = flipperIndex >= 2;
+                const baseRotation = side > 0 ? Math.PI / 4 : -Math.PI / 4;
+                
+                child.rotation.z = baseRotation + Math.sin(data.flipperWave + side * Math.PI) * 0.3;
+                child.rotation.x = Math.sin(data.flipperWave + side * Math.PI) * 0.15;
+            }
+            
+            // Head bobbing
+            if (i === data.headIndex) {
+                data.headBob += 0.04;
+                child.position.y = 0.3 + Math.sin(data.headBob) * 0.1;
+            }
+            
+            // Tail waving
+            if (i === data.tailIndex) {
+                data.tailWave += 0.08;
+                child.rotation.y = Math.sin(data.tailWave) * 0.2;
+            }
+        });
+        
+        // Face direction with smooth rotation
+        const targetRotation = data.angle;
+        const currentRotation = t.rotation.y;
+        let rotationDiff = targetRotation - currentRotation;
+        
+        // Normalize rotation difference to [-PI, PI]
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        t.rotation.y += rotationDiff * 0.08;
+        
+        // Slight pitch based on vertical movement
+        const verticalVelocity = (t.position.y - (t.userData.lastY || t.position.y));
+        t.rotation.x = verticalVelocity * 0.3 + Math.sin(time * 0.3 + index) * 0.03;
+        t.userData.lastY = t.position.y;
+    });
+}
+
 // Update plant animations
 function updatePlants() {
     plants.forEach(p => {
@@ -1103,6 +1415,7 @@ function animate() {
 
     // Update animations
     updateFish();
+    updateTurtles();
     updatePlants();
     updateBubbles();
     
@@ -1155,6 +1468,10 @@ function clearAll() {
     fish.forEach(f => scene.remove(f));
     fish = [];
     
+    // Remove all turtles
+    turtles.forEach(t => scene.remove(t));
+    turtles = [];
+    
     // Remove all plants
     plants.forEach(p => scene.remove(p));
     plants = [];
@@ -1184,6 +1501,7 @@ function onWindowResize() {
 // Update statistics display
 function updateStats() {
     document.getElementById('fishCount').textContent = fish.length;
+    document.getElementById('turtleCount').textContent = turtles.length;
     document.getElementById('plantCount').textContent = plants.length;
     document.getElementById('rockCount').textContent = decorations.length;
     document.getElementById('bubbleCount').textContent = bubbles.length;
