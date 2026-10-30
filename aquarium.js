@@ -375,6 +375,16 @@ function createFishSpecies(species = 'default') {
             iridescence = 0.2;
             metalness = 0.1;
             break;
+        case 'shark':
+            bodyColor = new THREE.Color(0x4a4a4a);
+            accentColor = new THREE.Color(0xffffff);
+            bodySize = { radiusFront: 1.6, radiusBack: 0.7, length: 6.5 };
+            headSize = 1.4;
+            tailSize = { width: 2.8, height: 2.2 };
+            finSize = 1.8;
+            iridescence = 0.3;
+            metalness = 0.2;
+            break;
         default:
             bodyColor = new THREE.Color().setHSL(Math.random(), 0.75, 0.55);
             accentColor = new THREE.Color().setHSL(Math.random(), 0.6, 0.7);
@@ -671,7 +681,7 @@ function createFishSpecies(species = 'default') {
 
 // Create a fish
 function createFish() {
-    const species = ['goldfish', 'tropical', 'angelfish', 'koi', 'tetra', 'pleco'];
+    const species = ['goldfish', 'tropical', 'angelfish', 'koi', 'tetra', 'pleco', 'shark'];
     const randomSpecies = species[Math.floor(Math.random() * species.length)];
     return createFishSpecies(randomSpecies);
 }
@@ -1624,6 +1634,35 @@ function addFish() {
     updateStats();
 }
 
+// Add shark to the scene
+function addShark() {
+    // Limit to 5 sharks for performance (they're larger)
+    const sharkCount = fish.filter(f => f.userData && f.userData.species === 'shark').length;
+    if (sharkCount >= 5) {
+        alert('Maximum 5 sharks allowed for performance');
+        return;
+    }
+    const shark = createFishSpecies('shark');
+    shark.userData.species = 'shark';
+    const x = Math.random() * 30 - 15;
+    const y = Math.random() * 12 - 3; // Sharks prefer middle depths
+    const z = Math.random() * 20 - 10;
+    shark.position.set(x, y, z);
+    scene.add(shark);
+    fish.push(shark);
+    updateStats();
+}
+
+// Remove shark from the scene
+function removeShark() {
+    const sharkIndex = fish.findIndex(f => f.userData && f.userData.species === 'shark');
+    if (sharkIndex !== -1) {
+        scene.remove(fish[sharkIndex]);
+        fish.splice(sharkIndex, 1);
+        updateStats();
+    }
+}
+
 // Add plant to the scene
 function addPlant() {
     // Limit to 15 plants for performance
@@ -2465,7 +2504,10 @@ function onWindowResize() {
 
 // Update statistics display
 function updateStats() {
-    document.getElementById('fishCount').textContent = fish.length;
+    const sharkCount = fish.filter(f => f.userData && f.userData.species === 'shark').length;
+    const regularFishCount = fish.length - sharkCount;
+    document.getElementById('fishCount').textContent = regularFishCount;
+    document.getElementById('sharkCount').textContent = sharkCount;
     document.getElementById('turtleCount').textContent = turtles.length;
     document.getElementById('eelCount').textContent = eels.length;
     document.getElementById('snailCount').textContent = snails.length;
