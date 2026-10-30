@@ -1,6 +1,6 @@
 // Three.js Aquarium Scene
 let scene, camera, renderer, controls;
-let aquarium, fish = [], plants = [], bubbles = [], decorations = [], turtles = [], eels = [];
+let aquarium, fish = [], plants = [], bubbles = [], decorations = [], turtles = [], eels = [], snails = [];
 let autoRotate = true;
 let showBubbles = true;
 let schoolingEnabled = true;
@@ -43,6 +43,11 @@ function init() {
     // Add initial rocks and pebbles
     for (let i = 0; i < 5; i++) {
         addRock();
+    }
+    
+    // Add initial snails
+    for (let i = 0; i < 2; i++) {
+        addSnail();
     }
     
     // Add castle to the bottom of the aquarium
@@ -1001,6 +1006,173 @@ function createEel() {
     return eelGroup;
 }
 
+// Create a snail
+function createSnail() {
+    const snailGroup = new THREE.Group();
+    
+    // Snail shell - spiral cone shape
+    const shellColor = new THREE.Color().setHSL(Math.random() * 0.15 + 0.05, 0.6, 0.4); // Brown/tan colors
+    const shellMaterial = new THREE.MeshStandardMaterial({
+        color: shellColor,
+        metalness: 0.2,
+        roughness: 0.7,
+        emissive: shellColor,
+        emissiveIntensity: 0.05
+    });
+    
+    // Create shell as a series of scaled spheres to form a spiral
+    const shellSegments = 8;
+    for (let i = 0; i < shellSegments; i++) {
+        const t = i / shellSegments;
+        const scale = 1 - t * 0.6; // Gradually smaller
+        const height = t * 2;
+        const angle = t * Math.PI * 3; // Spiral rotation
+        
+        const segmentGeometry = new THREE.SphereGeometry(0.6 * scale, 16, 16);
+        const segment = new THREE.Mesh(segmentGeometry, shellMaterial);
+        segment.position.set(
+            Math.cos(angle) * 0.5 * scale,
+            height,
+            Math.sin(angle) * 0.5 * scale
+        );
+        segment.scale.set(scale, scale * 0.8, scale);
+        segment.castShadow = true;
+        segment.receiveShadow = true;
+        snailGroup.add(segment);
+    }
+    
+    // Shell opening - darker material
+    const shellOpeningGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+    const shellOpeningMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x4a3728),
+        metalness: 0.1,
+        roughness: 0.8
+    });
+    const shellOpening = new THREE.Mesh(shellOpeningGeometry, shellOpeningMaterial);
+    shellOpening.position.set(0, 1.8, 0);
+    shellOpening.scale.set(0.7, 0.5, 0.7);
+    shellOpening.castShadow = true;
+    snailGroup.add(shellOpening);
+    
+    // Snail body - soft tissue
+    const bodyColor = new THREE.Color().setHSL(Math.random() * 0.1 + 0.08, 0.5, 0.35); // Darker brown
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: bodyColor,
+        metalness: 0.15,
+        roughness: 0.8
+    });
+    
+    // Body segments
+    const bodyGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.set(0, 0.3, 0);
+    body.scale.set(1, 0.7, 1.2);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    snailGroup.add(body);
+    
+    // Head
+    const headGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+    const headMaterial = new THREE.MeshStandardMaterial({
+        color: bodyColor,
+        metalness: 0.15,
+        roughness: 0.8
+    });
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.set(0, -0.2, 0);
+    head.scale.set(0.9, 0.8, 1.1);
+    head.castShadow = true;
+    head.receiveShadow = true;
+    snailGroup.add(head);
+    
+    // Eyes on tentacles - upper tentacles
+    const tentacleLength = 0.6;
+    const eyeGeometry = new THREE.SphereGeometry(0.08, 12, 12);
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x000000,
+        metalness: 0.6,
+        roughness: 0.2
+    });
+    
+    // Left upper tentacle with eye
+    const tentacleLeftGeometry = new THREE.CylinderGeometry(0.05, 0.04, tentacleLength, 8);
+    const tentacleMaterial = new THREE.MeshStandardMaterial({
+        color: bodyColor,
+        metalness: 0.1,
+        roughness: 0.8
+    });
+    const tentacleLeft = new THREE.Mesh(tentacleLeftGeometry, tentacleMaterial);
+    tentacleLeft.position.set(-0.25, -0.1, 0);
+    tentacleLeft.rotation.z = Math.PI / 3;
+    tentacleLeft.castShadow = true;
+    snailGroup.add(tentacleLeft);
+    
+    const eyeLeft = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    eyeLeft.position.set(-0.4, 0.35, 0);
+    eyeLeft.castShadow = true;
+    snailGroup.add(eyeLeft);
+    
+    // Right upper tentacle with eye
+    const tentacleRight = new THREE.Mesh(tentacleLeftGeometry, tentacleMaterial);
+    tentacleRight.position.set(0.25, -0.1, 0);
+    tentacleRight.rotation.z = -Math.PI / 3;
+    tentacleRight.castShadow = true;
+    snailGroup.add(tentacleRight);
+    
+    const eyeRight = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    eyeRight.position.set(0.4, 0.35, 0);
+    eyeRight.castShadow = true;
+    snailGroup.add(eyeRight);
+    
+    // Lower tentacles (shorter, no eyes)
+    const lowerTentacleLength = 0.4;
+    const tentacleLowerLeftGeometry = new THREE.CylinderGeometry(0.04, 0.03, lowerTentacleLength, 8);
+    
+    const tentacleLowerLeft = new THREE.Mesh(tentacleLowerLeftGeometry, tentacleMaterial);
+    tentacleLowerLeft.position.set(-0.15, -0.3, 0);
+    tentacleLowerLeft.rotation.z = Math.PI / 4;
+    tentacleLowerLeft.castShadow = true;
+    snailGroup.add(tentacleLowerLeft);
+    
+    const tentacleLowerRight = new THREE.Mesh(tentacleLowerLeftGeometry, tentacleMaterial);
+    tentacleLowerRight.position.set(0.15, -0.3, 0);
+    tentacleLowerRight.rotation.z = -Math.PI / 4;
+    tentacleLowerRight.castShadow = true;
+    snailGroup.add(tentacleLowerRight);
+    
+    // Mouth
+    const mouthGeometry = new THREE.SphereGeometry(0.08, 12, 12);
+    const mouthMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x3a2817),
+        metalness: 0.05,
+        roughness: 0.9
+    });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, -0.35, 0.35);
+    mouth.scale.set(0.8, 0.6, 0.5);
+    snailGroup.add(mouth);
+    
+    // Store animation data
+    snailGroup.userData = {
+        angle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.003 + 0.001, // Very slow movement
+        baseSpeed: Math.random() * 0.003 + 0.001,
+        targetSpeed: Math.random() * 0.003 + 0.001,
+        depthPreference: Math.random() * 8 - 10, // Prefer lower depths
+        tentacleWave: 0,
+        headBob: 0,
+        shellRotation: 0,
+        tentacleLeftIndex: 8,
+        tentacleRightIndex: 9,
+        tentacleLowerLeftIndex: 10,
+        tentacleLowerRightIndex: 11,
+        eyeLeftIndex: 7,
+        eyeRightIndex: 8
+    };
+    
+    return snailGroup;
+}
+
 
 // Create a plant
 function createPlant() {
@@ -1504,6 +1676,23 @@ function addEel() {
     updateStats();
 }
 
+// Add snail to the scene
+function addSnail() {
+    // Limit to 10 snails for performance
+    if (snails.length >= 10) {
+        alert('Maximum 10 snails allowed for performance');
+        return;
+    }
+    const snail = createSnail();
+    const x = Math.random() * 30 - 15;
+    const y = Math.random() * 6 - 10; // Snails prefer lower depths
+    const z = Math.random() * 20 - 10;
+    snail.position.set(x, y, z);
+    scene.add(snail);
+    snails.push(snail);
+    updateStats();
+}
+
 // Update fish positions and animations
 function updateFish() {
     const time = Date.now() * 0.001;
@@ -1900,6 +2089,114 @@ function updateEels() {
     });
 }
 
+// Update snail positions and animations
+function updateSnails() {
+    const time = Date.now() * 0.001;
+    
+    snails.forEach((s, index) => {
+        const data = s.userData;
+        
+        // Very slow, deliberate movement - snails are slow
+        const speedVariation = Math.sin(time * 0.2 + index) * 0.0005;
+        data.targetSpeed = data.baseSpeed + speedVariation;
+        data.speed += (data.targetSpeed - data.speed) * 0.02;
+        
+        // Slow turning
+        const turnRate = 0.004;
+        data.angle += (Math.random() - 0.5) * turnRate;
+        
+        // Move towards depth preference
+        const depthDiff = data.depthPreference - s.position.y;
+        s.position.y += depthDiff * 0.002;
+        
+        // Occasionally change depth preference (rarely)
+        if (Math.random() < 0.0002) {
+            data.depthPreference = Math.random() * 6 - 10;
+        }
+        
+        // Forward movement - very slow
+        const moveSpeed = data.speed * 1.2;
+        s.position.x += Math.cos(data.angle) * moveSpeed;
+        s.position.z += Math.sin(data.angle) * moveSpeed;
+        
+        // Very gentle bobbing motion
+        s.position.y += Math.sin(time * 0.3 + index) * 0.003;
+        
+        // Keep snail in bounds
+        const snailExtentX = 0.8;
+        const snailExtentZ = 1.0;
+        const snailExtentY = 0.8;
+        
+        const maxX = 20 - snailExtentX;
+        const minX = -20 + snailExtentX;
+        const maxZ = 15 - snailExtentZ;
+        const minZ = -15 + snailExtentZ;
+        const maxY = 15 - snailExtentY;
+        const minY = -13 + snailExtentY;
+        
+        // Boundary checking
+        if (s.position.x > maxX || s.position.x < minX) {
+            data.angle += Math.PI * 0.1;
+            s.position.x = Math.max(minX, Math.min(maxX, s.position.x));
+        }
+        if (s.position.z > maxZ || s.position.z < minZ) {
+            data.angle += Math.PI * 0.1;
+            s.position.z = Math.max(minZ, Math.min(maxZ, s.position.z));
+        }
+        if (s.position.y > maxY) {
+            s.position.y = maxY;
+            data.depthPreference = maxY - 2;
+        }
+        if (s.position.y < minY) {
+            s.position.y = minY;
+            data.depthPreference = minY + 1;
+        }
+        
+        // Tentacle wave animation
+        data.tentacleWave += 0.04 + data.speed * 1.5;
+        data.headBob += 0.03;
+        
+        // Animate tentacles and head
+        s.children.forEach((child, i) => {
+            // Upper left tentacle
+            if (i === data.tentacleLeftIndex) {
+                child.rotation.z = Math.PI / 3 + Math.sin(data.tentacleWave) * 0.15;
+            }
+            
+            // Upper right tentacle
+            if (i === data.tentacleRightIndex) {
+                child.rotation.z = -Math.PI / 3 + Math.sin(data.tentacleWave + Math.PI) * 0.15;
+            }
+            
+            // Lower left tentacle
+            if (i === data.tentacleLowerLeftIndex) {
+                child.rotation.z = Math.PI / 4 + Math.sin(data.tentacleWave + Math.PI / 2) * 0.1;
+            }
+            
+            // Lower right tentacle
+            if (i === data.tentacleLowerRightIndex) {
+                child.rotation.z = -Math.PI / 4 + Math.sin(data.tentacleWave + Math.PI * 1.5) * 0.1;
+            }
+        });
+        
+        // Face direction with smooth rotation
+        const targetRotation = data.angle;
+        const currentRotation = s.rotation.y;
+        let rotationDiff = targetRotation - currentRotation;
+        
+        // Normalize rotation difference to [-PI, PI]
+        while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+        while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+        
+        s.rotation.y += rotationDiff * 0.05;
+        
+        // Slight pitch based on vertical movement
+        const verticalVelocity = (s.position.y - (s.userData.lastY || s.position.y));
+        s.rotation.x = verticalVelocity * 0.2 + Math.sin(time * 0.2 + index) * 0.02;
+        s.userData.lastY = s.position.y;
+    });
+}
+
 // Update plant animations
 function updatePlants() {
     plants.forEach(p => {
@@ -1976,6 +2273,7 @@ function animate() {
     updateFish();
     updateTurtles();
     updateEels();
+    updateSnails();
     updatePlants();
     updateBubbles();
     
@@ -2032,6 +2330,14 @@ function clearAll() {
     turtles.forEach(t => scene.remove(t));
     turtles = [];
     
+    // Remove all eels
+    eels.forEach(e => scene.remove(e));
+    eels = [];
+    
+    // Remove all snails
+    snails.forEach(s => scene.remove(s));
+    snails = [];
+    
     // Remove all plants
     plants.forEach(p => scene.remove(p));
     plants = [];
@@ -2063,6 +2369,7 @@ function updateStats() {
     document.getElementById('fishCount').textContent = fish.length;
     document.getElementById('turtleCount').textContent = turtles.length;
     document.getElementById('eelCount').textContent = eels.length;
+    document.getElementById('snailCount').textContent = snails.length;
     document.getElementById('plantCount').textContent = plants.length;
     const shipCount = decorations.filter(d => d.userData && d.userData.isShip).length;
     const rockCount = decorations.length - shipCount;
