@@ -1693,6 +1693,105 @@ function addSnail() {
     updateStats();
 }
 
+// Remove fish from the scene
+function removeFish() {
+    if (fish.length === 0) {
+        alert('No fish to remove');
+        return;
+    }
+    const fishToRemove = fish.pop();
+    scene.remove(fishToRemove);
+    updateStats();
+}
+
+// Remove plant from the scene
+function removePlant() {
+    if (plants.length === 0) {
+        alert('No plants to remove');
+        return;
+    }
+    const plantToRemove = plants.pop();
+    scene.remove(plantToRemove);
+    updateStats();
+}
+
+// Remove turtle from the scene
+function removeTurtle() {
+    if (turtles.length === 0) {
+        alert('No turtles to remove');
+        return;
+    }
+    const turtleToRemove = turtles.pop();
+    scene.remove(turtleToRemove);
+    updateStats();
+}
+
+// Remove eel from the scene
+function removeEel() {
+    if (eels.length === 0) {
+        alert('No eels to remove');
+        return;
+    }
+    const eelToRemove = eels.pop();
+    scene.remove(eelToRemove);
+    updateStats();
+}
+
+// Remove snail from the scene
+function removeSnail() {
+    if (snails.length === 0) {
+        alert('No snails to remove');
+        return;
+    }
+    const snailToRemove = snails.pop();
+    scene.remove(snailToRemove);
+    updateStats();
+}
+
+// Remove rock from the scene
+function removeRock() {
+    // Find the last rock (non-ship decoration)
+    let rockIndex = -1;
+    for (let i = decorations.length - 1; i >= 0; i--) {
+        if (!decorations[i].userData || !decorations[i].userData.isShip) {
+            rockIndex = i;
+            break;
+        }
+    }
+    
+    if (rockIndex === -1) {
+        alert('No rocks to remove');
+        return;
+    }
+    
+    const rockToRemove = decorations[rockIndex];
+    scene.remove(rockToRemove);
+    decorations.splice(rockIndex, 1);
+    updateStats();
+}
+
+// Remove ship from the scene
+function removeShip() {
+    // Find the last ship decoration
+    let shipIndex = -1;
+    for (let i = decorations.length - 1; i >= 0; i--) {
+        if (decorations[i].userData && decorations[i].userData.isShip) {
+            shipIndex = i;
+            break;
+        }
+    }
+    
+    if (shipIndex === -1) {
+        alert('No ships to remove');
+        return;
+    }
+    
+    const shipToRemove = decorations[shipIndex];
+    scene.remove(shipToRemove);
+    decorations.splice(shipIndex, 1);
+    updateStats();
+}
+
 // Update fish positions and animations
 function updateFish() {
     const time = Date.now() * 0.001;
