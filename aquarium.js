@@ -1693,6 +1693,91 @@ function addSnail() {
     updateStats();
 }
 
+// Remove a fish from the scene
+function removeFish() {
+    if (fish.length === 0) {
+        alert('No fish to remove');
+        return;
+    }
+    const fish_obj = fish.pop();
+    scene.remove(fish_obj);
+    updateStats();
+}
+
+// Remove a turtle from the scene
+function removeTurtle() {
+    if (turtles.length === 0) {
+        alert('No turtles to remove');
+        return;
+    }
+    const turtle = turtles.pop();
+    scene.remove(turtle);
+    updateStats();
+}
+
+// Remove an eel from the scene
+function removeEel() {
+    if (eels.length === 0) {
+        alert('No eels to remove');
+        return;
+    }
+    const eel = eels.pop();
+    scene.remove(eel);
+    updateStats();
+}
+
+// Remove a snail from the scene
+function removeSnail() {
+    if (snails.length === 0) {
+        alert('No snails to remove');
+        return;
+    }
+    const snail = snails.pop();
+    scene.remove(snail);
+    updateStats();
+}
+
+// Remove a plant from the scene
+function removePlant() {
+    if (plants.length === 0) {
+        alert('No plants to remove');
+        return;
+    }
+    const plant = plants.pop();
+    scene.remove(plant);
+    updateStats();
+}
+
+// Remove a rock from the scene
+function removeRock() {
+    const rockCount = decorations.filter(d => !d.userData || !d.userData.isShip).length;
+    if (rockCount === 0) {
+        alert('No rocks to remove');
+        return;
+    }
+    // Find and remove the last rock (not a ship)
+    for (let i = decorations.length - 1; i >= 0; i--) {
+        if (!decorations[i].userData || !decorations[i].userData.isShip) {
+            const rock = decorations.splice(i, 1)[0];
+            scene.remove(rock);
+            updateStats();
+            return;
+        }
+    }
+}
+
+// Remove a ship from the scene
+function removeShip() {
+    const shipIndex = decorations.findIndex(d => d.userData && d.userData.isShip);
+    if (shipIndex === -1) {
+        alert('No ships to remove');
+        return;
+    }
+    const ship = decorations.splice(shipIndex, 1)[0];
+    scene.remove(ship);
+    updateStats();
+}
+
 // Update fish positions and animations
 function updateFish() {
     const time = Date.now() * 0.001;
